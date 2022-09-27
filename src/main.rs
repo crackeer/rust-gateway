@@ -2,7 +2,7 @@ mod service_api;
 mod handler;
 
 use axum::{
-    routing::{get, post},
+    routing::{get, post, any},
     http::StatusCode,
     response::IntoResponse,
     Json, Router,
@@ -27,7 +27,7 @@ async fn main() {
         .route("/", get(handler::test::root))
         // `POST /users` goes to `create_user`
         .route("/users", post(handler::test::create_user))
-        .route("/proxy", get(handler::test::proxy))
+        .route("/relay/:service/:api", any(handler::proxy::relay))
         .route("/files", get(handler::test::md_list))
         .route("/http", get(handler::test::http_request));
 
