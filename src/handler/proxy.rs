@@ -17,11 +17,6 @@ use reqwest;
 
 #[derive(Debug, Deserialize, Serialize)]
 
-pub async fn relay(
-    params: Params
-) -> impl IntoResponse {
-    axum::Json(params)
-}
 
 
 pub struct Params {
@@ -56,4 +51,10 @@ impl<B> FromRequest<B> for Params where
 
         Err(StatusCode::UNSUPPORTED_MEDIA_TYPE.into_response())
     }
+}
+
+pub async fn relay(
+    params: Params
+) -> impl IntoResponse {
+    axum::Json(params)
 }
