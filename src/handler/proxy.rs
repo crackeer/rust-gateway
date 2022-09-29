@@ -1,32 +1,29 @@
+use crate::service_api::api::get_md_list;
 use axum::{
     async_trait,
-    http::{StatusCode,header::CONTENT_TYPE, Request},
-    response::{IntoResponse, Response},
-    Json, Router,
-    extract::{Query, FromRequest, RequestParts},
-    http::request::Parts,
-    Form,
     body::{Bytes, HttpBody},
-    BoxError,
+    extract::{FromRequest, Query, RequestParts, Path},
+    http::request::Parts,
+    http::{header::CONTENT_TYPE, Request, StatusCode, HeaderMap},
+    response::{IntoResponse, Response},
+    BoxError, Form, Json, Router,
 };
-use serde_json::{Value};
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-use crate::service_api::{api::get_md_list};
 use reqwest;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::{collections::HashMap, io::Read};
 
 #[derive(Debug, Deserialize, Serialize)]
-
-
-
 pub struct Params {
     service: String,
     api: String,
-    params : Option<Value>,
+    params: Option<Value>,
+    header : Option<HashMap<String, String>>,
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for Params where
+impl<B> FromRequest<B> for Params
+where
     B: Send,
     B: HttpBody + Send,
     B::Data: Send,
@@ -35,17 +32,38 @@ impl<B> FromRequest<B> for Params where
     type Rejection = Response;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+
+        let result = Path::from_request(req).await;
+        if result.is_err() {
+            println!("{}", result.as_ref().err().unwrap());
+        }
+        let path_params : Path<Params> = result.unwrap();
+        let Path(tmp_params) = path_params;
+        let mut header : HashMap<String, String> = HashMap::new();
+        for (key, value) in req.headers().iter() {
+            let mut tmp_str = String::from("");
+            if value.clone().as_bytes().read_to_string(&mut tmp_str).is_ok() {
+                header.insert(key.to_string(), tmp_str);
+            }
+        }
+       
+        
         let content_type_header = req.headers().get(CONTENT_TYPE);
         let content_type = content_type_header.and_then(|value| value.to_str().ok());
 
         let method = req.method();
-        println!("{}{}", method.to_string(), content_type.is_some());
+
         if method.to_string().eq("POST") {
             if let Some(content_type) = content_type {
-                let bytes  = Bytes::from_request(req).await.unwrap();
-               
-                let data : Value = serde_json::from_slice(&bytes).unwrap();
-                return Ok(Params { params: Some(data), api : String::from("ss"), service: String::from("") });
+                let bytes = Bytes::from_request(req).await.unwrap();
+
+                let data: Value = serde_json::from_slice(&bytes).unwrap();
+                return Ok(Params {
+                    params: Some(data),
+                    api: tmp_params.api,
+                    service: tmp_params.service,
+                    header: Some(header),
+                });
             }
         }
 
@@ -53,8 +71,6 @@ impl<B> FromRequest<B> for Params where
     }
 }
 
-pub async fn relay(
-    params: Params
-) -> impl IntoResponse {
+pub async fn relay(params: Params) -> impl IntoResponse {
     axum::Json(params)
 }
