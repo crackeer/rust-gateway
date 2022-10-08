@@ -2,8 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
 use std::io::Error;
-
-
 use std::{
     fs::metadata,
     fs::{read_dir, DirEntry},

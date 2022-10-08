@@ -7,11 +7,15 @@ use axum::{
     extract::{Path, Query},
     http::request::Parts,
 };
+use sqlx::{MySql, Pool};
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::service_api::{api::get_md_list};
 use reqwest;
+use axum::extract::Extension;
+use serde_json::Value;
 
+use sqlx::{Error, FromRow};
 
 // basic handler that responds with a static string
 pub async fn root() -> &'static str {
@@ -87,4 +91,21 @@ pub struct CreateUser {
 pub struct User {
     id: u64,
     username: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
+pub struct Actor {
+    pub actor_id: u32,
+    pub first_name: String,
+}
+#[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
+pub struct AAA(HashMap<String, String>);
+
+pub async fn fetch_myqsl_data(
+    Extension(pool): Extension<Pool<MySql>>,
+) -> impl IntoResponse {
+    let list = sqlx::query_as::<_, Actor>(
+        r#"select * from actor"#,
+    ).fetch_all(&pool).await.unwrap();
+     (StatusCode::OK, Json(list))
 }

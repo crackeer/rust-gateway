@@ -8,7 +8,6 @@ use axum::{
     response::{IntoResponse, Response},
     BoxError, Form, Json, Router,
 };
-use reqwest;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::HashMap, io::Read};
@@ -54,7 +53,7 @@ where
         let method = req.method();
 
         if method.to_string().eq("POST") {
-            if let Some(content_type) = content_type {
+            if let Some(_content_type) = content_type {
                 let bytes = Bytes::from_request(req).await.unwrap();
 
                 let data: Value = serde_json::from_slice(&bytes).unwrap();
