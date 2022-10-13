@@ -1,5 +1,4 @@
 use sqlx::{MySql, Pool};
-use std::{time::Duration};
 use sqlx::mysql::MySqlPoolOptions;
 
 pub async fn establish_mysql_connection() -> Pool<MySql> {

@@ -1,23 +1,16 @@
-mod service_api;
-mod handler;
 mod container;
+mod handler;
+mod request;
+mod service_api;
 
 use axum::{
-    routing::{get, post, any},
-    http::StatusCode,
-    response::IntoResponse,
-    Json, Router,
-    extract::{Path, Query, Extension},
-    http::request::Parts,
+    extract::Extension,
+    routing::{any, get, post},
+    Router,
 };
-use std::io::{Error,ErrorKind};
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
+use container::pool::establish_mysql_connection;
 use std::net::SocketAddr;
 use tracing_subscriber;
-use reqwest;
-use container::pool::establish_mysql_connection;
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
@@ -34,7 +27,8 @@ async fn main() {
         .route("/relay/:service/:api", any(handler::proxy::relay))
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_myqsl_data))
-        .route("/http", get(handler::test::http_request)).layer(Extension(pool));
+        .route("/http", get(handler::test::http_request))
+        .layer(Extension(pool));
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`

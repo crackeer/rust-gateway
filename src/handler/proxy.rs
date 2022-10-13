@@ -1,23 +1,22 @@
-use crate::service_api::api::get_md_list;
+use crate::request::http;
 use axum::{
     async_trait,
     body::{Bytes, HttpBody},
-    extract::{FromRequest, Query, RequestParts, Path},
-    http::request::Parts,
-    http::{header::CONTENT_TYPE, Request, StatusCode, HeaderMap},
+    extract::{FromRequest, Path, RequestParts},
+    http::{header::CONTENT_TYPE, StatusCode},
     response::{IntoResponse, Response},
-    BoxError, Form, Json, Router,
+    BoxError, 
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{collections::HashMap, io::Read};
+use std::{collections::HashMap,  io::Read};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Params {
     service: String,
     api: String,
     params: Option<Value>,
-    header : Option<HashMap<String, String>>,
+    header: Option<HashMap<String, String>>,
 }
 
 #[async_trait]
@@ -31,22 +30,25 @@ where
     type Rejection = Response;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-
         let result = Path::from_request(req).await;
         if result.is_err() {
             println!("{}", result.as_ref().err().unwrap());
         }
-        let path_params : Path<Params> = result.unwrap();
+        let path_params: Path<Params> = result.unwrap();
         let Path(tmp_params) = path_params;
-        let mut header : HashMap<String, String> = HashMap::new();
+        let mut header: HashMap<String, String> = HashMap::new();
         for (key, value) in req.headers().iter() {
             let mut tmp_str = String::from("");
-            if value.clone().as_bytes().read_to_string(&mut tmp_str).is_ok() {
+            if value
+                .clone()
+                .as_bytes()
+                .read_to_string(&mut tmp_str)
+                .is_ok()
+            {
                 header.insert(key.to_string(), tmp_str);
             }
         }
-       
-        
+
         let content_type_header = req.headers().get(CONTENT_TYPE);
         let content_type = content_type_header.and_then(|value| value.to_str().ok());
 
@@ -71,5 +73,10 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    axum::Json(params)
+    //axum::Json(params)
+    let path = format!("./config/api/{}.toml", params.service);
+    print!("{}", path);
+    let data = http::read_config(path);
+    axum::Json(data)
+    
 }

@@ -1,30 +1,19 @@
-
-use axum::{
-    routing::{get, post},
-    http::StatusCode,
-    response::IntoResponse,
-    Json, Router,
-    extract::{Path, Query},
-    http::request::Parts,
-};
+use crate::service_api::api::get_md_list;
+use axum::extract::Extension;
+use axum::{extract::Query, http::StatusCode, response::IntoResponse, Json};
+use reqwest;
+use serde::{Deserialize, Serialize};
 use sqlx::{MySql, Pool};
 use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
-use crate::service_api::{api::get_md_list};
-use reqwest;
-use axum::extract::Extension;
-use serde_json::Value;
 
-use sqlx::{Error, FromRow};
+use sqlx::FromRow;
 
 // basic handler that responds with a static string
 pub async fn root() -> &'static str {
     "Hello, World!"
 }
 
-pub async fn create_user(
-    Json(payload): Json<CreateUser>,
-) -> impl IntoResponse {
+pub async fn create_user(Json(payload): Json<CreateUser>) -> impl IntoResponse {
     // insert your application logic here
     let user = User {
         id: 1337,
@@ -36,21 +25,6 @@ pub async fn create_user(
     (StatusCode::CREATED, Json(user))
 }
 
-pub async fn proxy(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    let path = params.get("path");
-    if path.is_some() {
-        let data = api::read_config(path.unwrap().to_string());
-        if data.is_some() {
-            //println!("Some Data:{}", data);
-            (StatusCode::CREATED, Json(data))
-        } else {
-            (StatusCode::CREATED, Json(data))
-        }
-    } else {
-        (StatusCode::CREATED, Json(None))
-    }
-    
-}
 
 pub async fn md_list(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let path = params.get("dir");
@@ -63,21 +37,20 @@ pub async fn md_list(Query(params): Query<HashMap<String, String>>) -> impl Into
     (StatusCode::CREATED, Json(vec![]))
 }
 
-pub async fn http_request(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
+pub async fn http_request(Query(_params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let resp = reqwest::get("https://httpbin.org/ip").await;
 
     let mut test = HashMap::new();
     test.insert(String::from("test"), String::from("test"));
 
     if resp.is_err() {
-        return  (StatusCode::CREATED, Json(test))
+        return (StatusCode::CREATED, Json(test));
     }
 
     let text = resp.unwrap().json::<HashMap<String, String>>().await;
-        
+
     (StatusCode::CREATED, Json(text.unwrap()))
 }
-
 
 // the input to our `create_user` handler
 // the input to our `create_user` handler
@@ -101,11 +74,10 @@ pub struct Actor {
 #[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
 pub struct AAA(HashMap<String, String>);
 
-pub async fn fetch_myqsl_data(
-    Extension(pool): Extension<Pool<MySql>>,
-) -> impl IntoResponse {
-    let list = sqlx::query_as::<_, Actor>(
-        r#"select * from actor"#,
-    ).fetch_all(&pool).await.unwrap();
-     (StatusCode::OK, Json(list))
+pub async fn fetch_myqsl_data(Extension(pool): Extension<Pool<MySql>>) -> impl IntoResponse {
+    let list = sqlx::query_as::<_, Actor>(r#"select * from actor"#)
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+    (StatusCode::OK, Json(list))
 }

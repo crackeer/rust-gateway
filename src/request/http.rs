@@ -1,36 +1,6 @@
-
-use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
-use std::io::Error;
-
-
-use std::{
-    fs::metadata,
-    fs::{read_dir, DirEntry},
-};
-
-#[derive(Serialize, Deserialize)]
-pub struct Service {
-    host: String,
-    timeout: u32,
-    id: String,
-    name: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Api {
-    path: String,
-    method: String,
-    id: String,
-    name: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct APIConfig {
-    service : Service,
-    api_list : Vec<Api>,
-}
+use super::define::APIConfig;
 
 pub fn read_config(path : String) -> Option<Box<APIConfig>> {
     println!("path is:{}", path);
