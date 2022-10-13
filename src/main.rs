@@ -2,6 +2,7 @@ mod container;
 mod handler;
 mod request;
 mod service_api;
+mod model;
 
 #[macro_use]
 extern crate lazy_static;
@@ -11,8 +12,8 @@ use axum::{
     Router,
 };
 use container::pool::establish_mysql_connection;
-use container::timer::print;
-use std::net::SocketAddr;
+use container::timer::{load_api};
+use std::{net::SocketAddr, sync::Arc};
 use tracing_subscriber;
 
 
@@ -22,7 +23,8 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let pool = establish_mysql_connection().await;
-    tokio::spawn(print());
+    
+    tokio::spawn(load_api(Arc::new(pool.to_owned())));
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
@@ -33,6 +35,7 @@ async fn main() {
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_myqsl_data))
         .route("/http", get(handler::test::http_request))
+        .route("/actor", get(handler::test::get_actor))
         .layer(Extension(pool));
 
     // run our app with hyper

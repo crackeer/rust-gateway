@@ -8,7 +8,7 @@ pub struct Service {
     name: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Api {
     pub path: String,
     pub method: String,

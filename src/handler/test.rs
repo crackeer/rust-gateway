@@ -1,12 +1,12 @@
+use crate::container::timer::APIMAP;
 use crate::service_api::api::get_md_list;
 use axum::extract::Extension;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, Json};
 use reqwest;
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use sqlx::{MySql, Pool};
 use std::collections::HashMap;
-
-use sqlx::FromRow;
 
 // basic handler that responds with a static string
 pub async fn root() -> &'static str {
@@ -24,7 +24,6 @@ pub async fn create_user(Json(payload): Json<CreateUser>) -> impl IntoResponse {
     // with a status code of `201 Created`
     (StatusCode::CREATED, Json(user))
 }
-
 
 pub async fn md_list(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let path = params.get("dir");
@@ -80,4 +79,12 @@ pub async fn fetch_myqsl_data(Extension(pool): Extension<Pool<MySql>>) -> impl I
         .await
         .unwrap();
     (StatusCode::OK, Json(list))
+}
+
+pub async fn get_actor(Query(_params): Query<HashMap<String, String>>) -> impl IntoResponse {
+    let mut the_map = APIMAP.try_lock().unwrap();
+
+    let i1: u32 = 200;
+    let data = the_map.get(&i1).unwrap().clone();
+    axum::Json(data)
 }
