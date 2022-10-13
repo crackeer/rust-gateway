@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -11,14 +10,14 @@ pub struct Service {
 
 #[derive(Serialize, Deserialize)]
 pub struct Api {
-    path: String,
-    method: String,
-    id: String,
-    name: Option<String>,
+    pub path: String,
+    pub method: String,
+    pub id: String,
+    pub name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct APIConfig {
-    service : Service,
-    api_list : Vec<Api>,
+    service: Service,
+    api_list: Vec<Api>,
 }

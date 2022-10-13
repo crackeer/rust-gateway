@@ -3,14 +3,18 @@ mod handler;
 mod request;
 mod service_api;
 
+#[macro_use]
+extern crate lazy_static;
 use axum::{
     extract::Extension,
     routing::{any, get, post},
     Router,
 };
 use container::pool::establish_mysql_connection;
+use container::timer::print;
 use std::net::SocketAddr;
 use tracing_subscriber;
+
 
 #[tokio::main]
 async fn main() {
@@ -18,6 +22,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let pool = establish_mysql_connection().await;
+    tokio::spawn(print());
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
@@ -34,6 +39,7 @@ async fn main() {
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);
+    print!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

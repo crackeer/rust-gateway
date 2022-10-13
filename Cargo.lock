@@ -36,6 +36,7 @@ name = "api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "lazy_static",
  "rbatis",
  "rbdc-mysql",
  "rbs",

@@ -1,6 +1,7 @@
 use sqlx::{MySql, Pool};
 use sqlx::mysql::MySqlPoolOptions;
 
+
 pub async fn establish_mysql_connection() -> Pool<MySql> {
     let database_url = String::from("mysql://root:12345678@localhost/sakila");
      let pool = MySqlPoolOptions::new()
