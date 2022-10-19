@@ -73,10 +73,12 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    //axum::Json(params)
-    let path = format!("./config/api/{}.toml", params.service);
+    axum::Json(params)
+    /* 
+    let path = format!("./config/service/{}.toml", params.service);
     print!("{}", path);
-    let data = http::read_config(path);
+    let data = http::re(path);
     axum::Json(data)
+    */
     
 }

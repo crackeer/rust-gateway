@@ -73,7 +73,7 @@ pub struct Actor {
 #[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
 pub struct AAA(HashMap<String, String>);
 
-pub async fn fetch_myqsl_data(Extension(pool): Extension<Pool<MySql>>) -> impl IntoResponse {
+pub async fn fetch_mysql_data(Extension(pool): Extension<Pool<MySql>>) -> impl IntoResponse {
     let list = sqlx::query_as::<_, Actor>(r#"select * from actor"#)
         .fetch_all(&pool)
         .await

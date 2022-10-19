@@ -1,8 +1,9 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use super::define::APIConfig;
+use super::define::Service;
 
-pub fn read_config(path : String) -> Option<Box<APIConfig>> {
+pub fn read_service_list(path : String) -> Option<Box<HashMap<String, Service>>> {
     println!("path is:{}", path);
     let result = File::open(path);
     let mut content = String::from("");
@@ -12,7 +13,7 @@ pub fn read_config(path : String) -> Option<Box<APIConfig>> {
            return None
         }
 
-        let decoded: APIConfig = toml::from_str(&content).unwrap();
+        let decoded: HashMap<String, Service> = toml::from_str(&content).unwrap();
         println!("connent is {}", content);
         Some(Box::new(decoded))
     } else {

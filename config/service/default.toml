@@ -1,0 +1,2 @@
+baidu = {host = "http://baidu.com", timeout = 1000, title = "baidu" }
+opensvc = {host = "http://i.test.com", timeout = 1000, title = "opensvc" }

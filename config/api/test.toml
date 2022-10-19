@@ -1,6 +1,0 @@
-service = {host = "baidu.com", timeout = 1000, id = "baidu",name = "baidu"}
-api_list = [
-    {path = "/simple", method = "post", id = "simple", name = "abc", content_type="application/json"},
-    {path = "/simple", method = "post", id = "simple", name = "abc"},
-    {path = "/simple", method = "post", id = "simple", name = "abc"}
-]
