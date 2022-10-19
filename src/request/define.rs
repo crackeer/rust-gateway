@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone,Debug)]
 pub struct Service {
     host: String,
     timeout: u32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct API {
     pub path: String,
     pub method: String,
@@ -36,6 +36,7 @@ impl FileFactory {
 }
 
 fn read_file(path: &str) -> Result<String, std::io::Error> {
+    println!("{}", path);
     let mut result = File::open(path)?;
     let mut content = String::from("");
     result.read_to_string(&mut content)?;
@@ -50,7 +51,6 @@ impl ServiceAPIFactory for FileFactory {
             let decoded: HashMap<String, API> = toml::from_str(&content.unwrap()).unwrap();
             Some(decoded)
         } else {
-            println!("{}", content.err().unwrap());
             None
         }
     }
@@ -61,7 +61,6 @@ impl ServiceAPIFactory for FileFactory {
             let decoded: HashMap<String, Service> = toml::from_str(&content.unwrap()).unwrap();
             Some(decoded)
         } else {
-            println!("{}", content.err().unwrap());
             None
         }
     }

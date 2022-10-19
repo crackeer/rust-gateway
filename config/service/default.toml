@@ -1,2 +1,3 @@
-baidu = {host = "http://baidu.com", timeout = 1000, title = "baidu" }
-opensvc = {host = "http://i.test.com", timeout = 1000, title = "opensvc" }
+baidu = {host = "http://baidu.com", timeout = 1000}
+opensvc = {host = "http://i.test.com", timeout = 1000}
+340 = {host = "http://i.onn.com", timeout = 1000}

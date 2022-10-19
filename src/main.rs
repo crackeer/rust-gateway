@@ -15,6 +15,7 @@ use container::pool::establish_mysql_connection;
 use container::timer::{load_service_api};
 use std::{net::SocketAddr, sync::Arc};
 use tracing_subscriber;
+use request::define::{FileFactory, ServiceAPIFactory};
 
 
 #[tokio::main]
@@ -23,7 +24,9 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     //let pool = establish_mysql_connection().await;
-    
+    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"));
+    tokio::spawn(load_service_api(Arc::new(factory), String::from("default")));
+
     //tokio::spawn(load_api(Arc::new(pool.to_owned())));
     // build our application with a route
     let app = Router::new()

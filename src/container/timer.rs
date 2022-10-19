@@ -1,4 +1,4 @@
-use crate::request::define::{ServiceAPIFactory, Service};
+use crate::request::define::{ServiceAPIFactory, Service, API};
 
 /* 
 use sqlx::{MySql, Pool};
@@ -9,7 +9,8 @@ use std::sync::{Arc, Mutex};
 use tokio::time;
 
 lazy_static! {
-    pub static ref APIMAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref SERVICE_MAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref API_MAP: Arc<Mutex<HashMap<String, API>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 /* 
@@ -43,11 +44,20 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
         interval.tick().await;
         println!("load_service_api coming");
 
-        let service_map = factory.get_service_list(env.clone());
-        let mut the_map = APIMAP.try_lock().unwrap();
-        for (key, item) in service_map.unwrap().iter() {
-            the_map.insert(key.clone(), item.clone());
+        let service_list = factory.get_service_list(env.clone());
+        let mut service_map = SERVICE_MAP.try_lock().unwrap();
+        let mut api_map = API_MAP.try_lock().unwrap();
+        if let Some(service_list) = service_list {
+            for (key, item) in service_list.iter() {
+                if let Some(tmp_api_map) = factory.get_api_list(key.clone()) {
+                    for (key1, item1) in tmp_api_map.iter() {
+                        api_map.insert(key1.clone(), item1.clone());
+                    }
+                }
+                service_map.insert(key.clone(), item.clone());
+            }
         }
+      
     }
 }
 
