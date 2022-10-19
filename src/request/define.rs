@@ -5,8 +5,8 @@ use std::io::{Read};
 
 #[derive(Serialize, Deserialize, Clone,Debug)]
 pub struct Service {
-    host: String,
-    timeout: u32,
+    pub host: String,
+    pub timeout: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

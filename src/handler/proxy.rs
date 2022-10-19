@@ -9,7 +9,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::HashMap,  io::Read};
-
+use crate::request::request::{do_request};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Params {
     service: String,
@@ -72,12 +72,7 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    axum::Json(params)
-    /* 
-    let path = format!("./config/service/{}.toml", params.service);
-    print!("{}", path);
-    let data = http::re(path);
-    axum::Json(data)
-    */
+    let response = do_request(params.service, params.api, params.params, params.header).await;
     
+    axum::Json(response.unwrap())
 }
