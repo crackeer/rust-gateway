@@ -81,6 +81,7 @@ pub async fn fetch_mysql_data(Extension(pool): Extension<Pool<MySql>>) -> impl I
     (StatusCode::OK, Json(list))
 }
 
+/* 
 pub async fn get_actor(Query(_params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let mut the_map = APIMAP.try_lock().unwrap();
 
@@ -88,3 +89,4 @@ pub async fn get_actor(Query(_params): Query<HashMap<String, String>>) -> impl I
     let data = the_map.get(&i1).unwrap().clone();
     axum::Json(data)
 }
+*/

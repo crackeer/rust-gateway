@@ -1,4 +1,4 @@
-use crate::request::http::read_service_list;
+use crate::request::define::{FileFactory, ServiceAPIFactory};
 use axum::{
     extract::{ Path},
     response::IntoResponse
@@ -6,9 +6,7 @@ use axum::{
 use std::{collections::HashMap};
 
 pub async fn get_service_list(Path(params): Path<HashMap<String, String>>) -> impl IntoResponse {
-    println!("{}", "SSS service list is not available");
-    let env  = params.get("env").unwrap();
-    let path = format!("./config/service/{}.toml", env);
-    let list = read_service_list(path);
-    axum::Json(list)
+
+    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"));
+    axum::Json(factory.get_service_list(params.get("env").unwrap().to_string()))
 }

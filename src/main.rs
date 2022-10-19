@@ -12,7 +12,7 @@ use axum::{
     Router,
 };
 use container::pool::establish_mysql_connection;
-use container::timer::{load_api};
+use container::timer::{load_service_api};
 use std::{net::SocketAddr, sync::Arc};
 use tracing_subscriber;
 
@@ -35,8 +35,7 @@ async fn main() {
         .route("/relay/:service/:api", any(handler::proxy::relay))
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_mysql_data))
-        .route("/http", get(handler::test::http_request))
-        .route("/actor", get(handler::test::get_actor));
+        .route("/http", get(handler::test::http_request));
         //.layer(Extension(pool));
 
     // run our app with hyper
