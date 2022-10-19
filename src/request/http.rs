@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use super::define::Service;
 
-pub fn read_service_list(path : String) -> Option<Box<HashMap<String, Service>>> {
+pub fn read_service_list(path : String) -> Option<HashMap<String, Service>> {
     println!("path is:{}", path);
     let result = File::open(path);
     let mut content = String::from("");
@@ -15,7 +15,7 @@ pub fn read_service_list(path : String) -> Option<Box<HashMap<String, Service>>>
 
         let decoded: HashMap<String, Service> = toml::from_str(&content).unwrap();
         println!("connent is {}", content);
-        Some(Box::new(decoded))
+        Some(decoded)
     } else {
         println!("{}", result.err().unwrap());
         None
