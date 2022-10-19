@@ -62,6 +62,7 @@ pub async fn do_request(
     let api_config = api_config.unwrap();
 
     let full_url_path = format!("{}/{}", service_config.host, api_config.path);
+    println!("{}", full_url_path);
     /*
     let response = run_test_request(full_url_path, api_config.method.clone(), api_config.content_type.clone(), headers, params);
     if let Ok(response) = response {
