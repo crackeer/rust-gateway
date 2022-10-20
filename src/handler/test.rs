@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use sqlx::{MySql, Pool};
 use std::collections::HashMap;
+use serde_json::Value;
 
 // basic handler that responds with a static string
 pub async fn root() -> &'static str {
@@ -36,18 +37,15 @@ pub async fn md_list(Query(params): Query<HashMap<String, String>>) -> impl Into
 }
 
 pub async fn http_request(Query(_params): Query<HashMap<String, String>>) -> impl IntoResponse {
-    let resp = reqwest::get("https://httpbin.org/ip").await;
 
-    let mut test = HashMap::new();
-    test.insert(String::from("test"), String::from("test"));
-
-    if resp.is_err() {
-        return (StatusCode::CREATED, Json(test));
+    let client = reqwest::Client::new();
+    let data = client.get("https://httpbin.org/ip").send().await;
+    if data.is_err(){
+        return Json(Value::String(String::from("Error getting ip")));
     }
 
-    let text = resp.unwrap().json::<HashMap<String, String>>().await;
-
-    (StatusCode::CREATED, Json(text.unwrap()))
+    let response : Value = data.unwrap().json().await.unwrap();
+    Json(response)
 }
 
 // the input to our `create_user` handler
@@ -69,8 +67,6 @@ pub struct Actor {
     pub actor_id: u32,
     pub first_name: String,
 }
-#[derive(Serialize, Deserialize, Debug, FromRow, Clone)]
-pub struct AAA(HashMap<String, String>);
 
 pub async fn fetch_mysql_data(Extension(pool): Extension<Pool<MySql>>) -> impl IntoResponse {
     let list = sqlx::query_as::<_, Actor>(r#"select * from actor"#)

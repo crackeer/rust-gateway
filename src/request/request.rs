@@ -1,10 +1,7 @@
-use super::define::{Service, API};
-use crate::container::timer::{API_MAP, SERVICE_MAP, CLIENT};
-use reqwest::{blocking::Response, Error};
-use serde::{Deserialize, Serialize};
+use crate::container::timer::{API_MAP, SERVICE_MAP};
+use reqwest::{Error, Response};
 use serde_json::Value;
-use std::{collections::HashMap, future::Future, sync::Arc};
-use tokio::task;
+use std::collections::HashMap;
 
 pub struct RequestConfig {
     pub url: String,
@@ -12,21 +9,18 @@ pub struct RequestConfig {
     pub content_type: Option<String>,
 }
 
-//static mut CLIENT : reqwest::blocking::Client  = reqwest::blocking::Client::new();
-
 impl RequestConfig {
-    pub fn cat(
+    pub async fn do_request(
         &self,
         value: Option<Value>,
-        headers: Option<HashMap<String, String>>,
-    ) -> Result<Value, String> {
-        let client = reqwest::blocking::Client::new();
-        let mut builder: reqwest::blocking::RequestBuilder = client.get(&self.url);
-        let mut content_type : String = String::new();
-        if let Some(value) =  self.content_type.as_ref() {
+        _headers: Option<HashMap<String, String>>,
+    ) -> Result<Response, Error> {
+        let client = reqwest::Client::new();
+        let mut builder: reqwest::RequestBuilder = client.get(&self.url);
+        let mut content_type: String = String::new();
+        if let Some(value) = self.content_type.as_ref() {
             content_type = value.clone();
         }
-        
         if self.method == "POST" {
             builder = client.post(&self.url);
             if let Some(params) = value {
@@ -35,18 +29,10 @@ impl RequestConfig {
                 }
             }
         }
-        //return Ok(String::from("Simple RequestConfig"));
-        let response = builder.send();
-        if let Ok(real) = response {
-            let value : Value = real.json().unwrap();
-            std::mem::forget(client);
-            return Ok(value)
-        }
-        Err(response.err().unwrap().to_string())
-       
+        let response = builder.send().await?;
+        Ok(response)
     }
 }
-
 
 pub async fn do_request(
     service: String,
@@ -70,27 +56,18 @@ pub async fn do_request(
     let api_config = api_config.unwrap();
 
     let full_url_path = format!("{}/{}", service_config.host, api_config.path);
-    println!("Request full_url:{}{}", full_url_path, api_config.path);
-    /*
-    let response = run_test_request(full_url_path, api_config.method.clone(), api_config.content_type.clone(), headers, params);
-    if let Ok(response) = response {
-        let value : Value = response.json().unwrap();
-        return Ok(value)
-    }
-    Err(String::from(response.err().unwrap().to_string()))
-     */
 
-    
     let request_config = RequestConfig {
         url: full_url_path,
         method: api_config.method.clone(),
         content_type: api_config.content_type.clone(),
     };
 
-    let response = request_config.cat(params, headers);
+    let response = request_config.do_request(params, headers).await;
 
     if let Ok(response) = response {
-        return Ok(response)
+        let data : Value = response.json().await.unwrap();
+        return Ok(data);
     }
     Err(String::from(response.err().unwrap().to_string()))
 }

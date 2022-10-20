@@ -11,8 +11,6 @@ use tokio::time;
 lazy_static! {
     pub static ref SERVICE_MAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
     pub static ref API_MAP: Arc<Mutex<HashMap<String, API>>> = Arc::new(Mutex::new(HashMap::new()));
-
-    pub static ref CLIENT: reqwest::blocking::Client  = reqwest::blocking::Client::new();
 }
 
 /* 

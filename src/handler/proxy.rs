@@ -72,7 +72,6 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    println!("{}{}", params.api, params.service);
     let response = do_request(params.service, params.api, params.params, params.header).await;
     axum::Json(response)
 }

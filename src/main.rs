@@ -38,7 +38,7 @@ async fn main() {
         .route("/relay/:service/:api", any(handler::proxy::relay))
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_mysql_data))
-        .route("/http", get(handler::test::http_request));
+        .route("/http", any(handler::test::http_request));
         //.layer(Extension(pool));
 
     // run our app with hyper
