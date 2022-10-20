@@ -1,15 +1,19 @@
+use crate::request::request::do_request;
 use axum::{
     async_trait,
     body::{Bytes, HttpBody},
-    extract::{FromRequest, Path, RequestParts},
-    http::{header::CONTENT_TYPE, StatusCode},
+    extract::{FromRequest, Path, Query, RequestParts},
+    http::{header::CONTENT_TYPE, StatusCode, Uri},
     response::{IntoResponse, Response},
-    BoxError, 
+    BoxError,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::{collections::HashMap,  io::Read};
-use crate::request::request::{do_request};
+use serde_json::{json, Value};
+use std::{
+    collections::{hash_map::RandomState, HashMap},
+    io::Read,
+};
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Params {
     service: String,
@@ -47,27 +51,38 @@ where
                 header.insert(key.to_string(), tmp_str);
             }
         }
+        let mut data: Value = json!({});
+        let query: Query<HashMap<String, String, RandomState>> =
+            Query::from_request(req).await.unwrap();
+
+        let object = data.as_object_mut().unwrap();
+        for (key, value) in query.iter() {
+            object.insert(String::from(key), Value::String(value.clone()));
+        }
 
         let content_type_header = req.headers().get(CONTENT_TYPE);
         let content_type = content_type_header.and_then(|value| value.to_str().ok());
 
-        let method = req.method();
-
-        if method.to_string().eq("POST") {
-            if let Some(_content_type) = content_type {
-                let bytes = Bytes::from_request(req).await.unwrap();
-
-                let data: Value = serde_json::from_slice(&bytes).unwrap();
-                return Ok(Params {
-                    params: Some(data),
-                    api: tmp_params.api,
-                    service: tmp_params.service,
-                    header: Some(header),
-                });
+        if req.method().to_string().eq("POST") {
+            if let Some(content_type) = content_type {
+                if content_type == "application/json" {
+                    let bytes = Bytes::from_request(req).await.unwrap();
+                    let post_data: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+                    if let Value::Object(post_map) = post_data {
+                        for (key, value) in post_map.iter() {
+                            object.insert(String::from(key), value.clone());
+                        }
+                    }
+                }
             }
         }
 
-        Err(StatusCode::UNSUPPORTED_MEDIA_TYPE.into_response())
+        return Ok(Params {
+            params: Some(data),
+            api: tmp_params.api,
+            service: tmp_params.service,
+            header: Some(header),
+        });
     }
 }
 
