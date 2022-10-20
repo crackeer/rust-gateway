@@ -11,6 +11,8 @@ use tokio::time;
 lazy_static! {
     pub static ref SERVICE_MAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
     pub static ref API_MAP: Arc<Mutex<HashMap<String, API>>> = Arc::new(Mutex::new(HashMap::new()));
+
+    pub static ref CLIENT: reqwest::blocking::Client  = reqwest::blocking::Client::new();
 }
 
 /* 
@@ -45,7 +47,12 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
         println!("load_service_api coming");
 
         let service_list = factory.get_service_list(env.clone());
-        let mut service_map = SERVICE_MAP.try_lock().unwrap();
+        let result = SERVICE_MAP.try_lock();
+        if result.is_err() {
+            println!("load_service_api failed, err = {}", result.err().unwrap());
+            continue;
+        }
+        let mut service_map = result.unwrap();
         let mut api_map = API_MAP.try_lock().unwrap();
         if let Some(service_list) = service_list {
             for (key, item) in service_list.iter() {
