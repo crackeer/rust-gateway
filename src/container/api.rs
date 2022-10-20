@@ -5,9 +5,8 @@ use sqlx::{MySql, Pool};
 */
 
 use std::collections::HashMap;
-use std::result;
 use std::sync::{Arc, Mutex};
-use tokio::{time, spawn};
+use tokio::{time};
 
 lazy_static! {
     pub static ref SERVICE_MAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -62,26 +61,25 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
                     }
                 }
             }
-        }
-        //spawn(check());
-        //check();
-        /* 
-        let result = SERVICE_MAP.clone();
-       
-        let service_map_tmp  = result.try_lock().unwrap();
-    
-        for (key, value) in service_map_tmp.iter() {
-            println!("getget:{}", key);
-        }*/
-        
+        }        
     }
 }
 
-async fn check() {
+pub fn get_service(name: &String) -> Option<Service> {
     let service_map = SERVICE_MAP.clone();
-    let service_map  = service_map.lock().unwrap().clone();
-    for (key, value) in service_map.iter() {
-        println!("getget:{}", key);
+    let locker  = service_map.try_lock().unwrap();
+    if let Some(data) = locker.get(name) {
+        return Some(data.clone());
     }
+    None
+}
+
+pub fn get_service_api(name: &String, api: &String) -> Option<API> {
+    let api_map = API_MAP.clone();
+    let locker  = api_map.try_lock().unwrap();
+    if let Some(data) = locker.get(&format!("{}-{}", name, api)) {
+        return Some(data.clone());
+    }
+    None
 }
 

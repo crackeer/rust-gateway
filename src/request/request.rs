@@ -1,4 +1,4 @@
-use crate::container::timer::{API_MAP, SERVICE_MAP};
+use crate::container::api::{ get_service, get_service_api};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -40,24 +40,16 @@ pub async fn do_request(
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<Value, String> {
-    let service_map = SERVICE_MAP.clone();
-    let service_map  = service_map.lock().unwrap().clone();
-
-
-    let service_config = service_map.get(&service);
-
+    let service_config = get_service(&service);
     if service_config.is_none() {
-        return Err(String::from("No service specified for service"));
+        return Err(String::from("No service specified"));
     }
     let service_config = service_config.unwrap();
 
-    let api_map = API_MAP.clone();
-    let api_map  = api_map.lock().unwrap().clone();
-    let api_config = api_map.get(&format!("{}-{}", service, api));
+    let api_config = get_service_api(&service, &api);
     if api_config.is_none() {
-        return Err(String::from("No service api specified for service"));
+        return Err(String::from("No service api specified"));
     }
-
     let api_config = api_config.unwrap();
 
     let full_url_path = format!("{}/{}", service_config.host, api_config.path);
@@ -75,13 +67,4 @@ pub async fn do_request(
         return Ok(data);
     }
     Err(String::from(response.err().unwrap().to_string()))
-}
-
-pub async fn do_request1(
-    service: String,
-    api: String,
-    params: Option<Value>,
-    headers: Option<HashMap<String, String>>,
-) -> Result<String, String> {
-    Err(String::from(service))
 }

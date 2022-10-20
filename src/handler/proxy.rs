@@ -9,7 +9,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::HashMap,  io::Read};
-use crate::request::request::{do_request, do_request1};
+use crate::request::request::{do_request};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Params {
     service: String,
