@@ -1,4 +1,4 @@
-use crate::container::api::{ get_service, get_service_api};
+use crate::container::api::{get_service, get_service_api};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -21,7 +21,11 @@ impl RequestConfig {
         if let Some(value) = self.content_type.as_ref() {
             content_type = value.clone();
         }
-        if self.method == "POST" {
+        if self.method == "GET" {
+            let full_url = format!("{}?{}", self.url, build_query(&value));
+            println!("{}", full_url);
+            builder = client.get(&full_url);
+        } else if self.method == "POST" {
             builder = client.post(&self.url);
             if let Some(params) = value {
                 if content_type == "application/json" {
@@ -32,6 +36,27 @@ impl RequestConfig {
         let response = builder.send().await?;
         Ok(response)
     }
+}
+
+fn build_query(data: &Option<Value>) -> String {
+    if data.is_none() {
+        return String::new();
+    }
+    let data = data.as_ref().unwrap();
+    if !data.is_object() {
+        return String::new();
+    }
+
+    let map = data.as_object().unwrap();
+    let mut query = String::new();
+    for (key, value) in map.iter() {
+        if query.is_empty() {
+            query.push_str(&format!("{}={}", key, value.to_string()));
+        } else {
+            query.push_str(&format!("&{}={}", key, value.to_string()));
+        }
+    }
+    query
 }
 
 pub async fn do_request(
@@ -63,7 +88,7 @@ pub async fn do_request(
     let response = request_config.do_request(params, headers).await;
 
     if let Ok(response) = response {
-        let data : Value = response.json().await.unwrap();
+        let data: Value = response.json().await.unwrap();
         return Ok(data);
     }
     Err(String::from(response.err().unwrap().to_string()))
