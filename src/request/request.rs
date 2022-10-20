@@ -40,17 +40,22 @@ pub async fn do_request(
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<Value, String> {
-    let service_map = SERVICE_MAP.try_lock().unwrap().clone();
+    let service_map = SERVICE_MAP.clone();
+    let service_map  = service_map.lock().unwrap().clone();
+
+
     let service_config = service_map.get(&service);
+
     if service_config.is_none() {
         return Err(String::from("No service specified for service"));
     }
     let service_config = service_config.unwrap();
 
-    let api_map = API_MAP.try_lock().unwrap().clone();
-    let api_config = api_map.get(&api);
+    let api_map = API_MAP.clone();
+    let api_map  = api_map.lock().unwrap().clone();
+    let api_config = api_map.get(&format!("{}-{}", service, api));
     if api_config.is_none() {
-        return Err(String::from("No service specified for service"));
+        return Err(String::from("No service api specified for service"));
     }
 
     let api_config = api_config.unwrap();
