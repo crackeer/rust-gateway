@@ -63,7 +63,7 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
                 }
             }
         }
-        spawn(check());
+        //spawn(check());
         //check();
         /* 
         let result = SERVICE_MAP.clone();
