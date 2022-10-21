@@ -42,7 +42,7 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
 
     loop {
         interval.tick().await;
-        println!("load_service_api coming");
+        //println!("load_service_api coming");
 
         let service_list = factory.get_service_list(env.clone());
         let result = SERVICE_MAP.try_lock();

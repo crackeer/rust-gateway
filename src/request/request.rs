@@ -51,12 +51,28 @@ fn build_query(data: &Option<Value>) -> String {
     let mut query = String::new();
     for (key, value) in map.iter() {
         if query.is_empty() {
-            query.push_str(&format!("{}={}", key, value.to_string()));
+            query.push_str(&format!("{}={}", key, value_to_string(value)));
         } else {
-            query.push_str(&format!("&{}={}", key, value.to_string()));
+            query.push_str(&format!("&{}={}", key, value_to_string(value)));
         }
     }
     query
+}
+
+fn value_to_string(value : &Value) -> String {
+    match value {
+        Value::String(s) => s.clone(),
+        Value::Number(n) => format!("{}", n),
+        Value::Bool(b) => {
+            if *b {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        }
+        Value::Null => "".to_string(),
+        _ => value.to_string(),
+    }
 }
 
 pub async fn do_request(

@@ -36,7 +36,7 @@ impl FileFactory {
 }
 
 fn read_file(path: &str) -> Result<String, std::io::Error> {
-    println!("{}", path);
+    //println!("{}", path);
     let mut result = File::open(path)?;
     let mut content = String::from("");
     result.read_to_string(&mut content)?;
