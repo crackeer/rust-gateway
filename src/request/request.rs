@@ -1,4 +1,6 @@
+use super::define::Response as APIResponse;
 use crate::container::api::{get_service, get_service_api};
+use crate::util::json::{extract_json_value, value_to_string};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -36,6 +38,14 @@ impl RequestConfig {
         let response = builder.send().await?;
         Ok(response)
     }
+    pub async fn extract_response(&self, value: &Value) -> APIResponse {
+        return APIResponse {
+            data: None,
+            code: 0,
+            message: String::from(""),
+            cost: 1,
+        };
+    }
 }
 
 fn build_query(data: &Option<Value>) -> String {
@@ -59,28 +69,12 @@ fn build_query(data: &Option<Value>) -> String {
     query
 }
 
-fn value_to_string(value : &Value) -> String {
-    match value {
-        Value::String(s) => s.clone(),
-        Value::Number(n) => format!("{}", n),
-        Value::Bool(b) => {
-            if *b {
-                "true".to_string()
-            } else {
-                "false".to_string()
-            }
-        }
-        Value::Null => "".to_string(),
-        _ => value.to_string(),
-    }
-}
-
 pub async fn do_request(
     service: String,
     api: String,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
-) -> Result<Value, String> {
+) -> Result<APIResponse, String> {
     let service_config = get_service(&service);
     if service_config.is_none() {
         return Err(String::from("No service specified"));
@@ -105,7 +99,7 @@ pub async fn do_request(
 
     if let Ok(response) = response {
         let data: Value = response.json().await.unwrap();
-        return Ok(data);
+        return Ok(request_config.extract_response(&data));
     }
     Err(String::from(response.err().unwrap().to_string()))
 }

@@ -3,6 +3,7 @@ mod handler;
 mod request;
 mod service_api;
 mod model;
+mod util;
 
 #[macro_use]
 extern crate lazy_static;
