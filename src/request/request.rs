@@ -38,7 +38,7 @@ impl RequestConfig {
         let response = builder.send().await?;
         Ok(response)
     }
-    pub async fn extract_response(&self, value: &Value) -> APIResponse {
+    pub fn extract_response(&self, value: &Value) -> APIResponse {
         return APIResponse {
             data: None,
             code: 0,
@@ -89,17 +89,17 @@ pub async fn do_request(
 
     let full_url_path = format!("{}/{}", service_config.host, api_config.path);
 
-    let request_config = RequestConfig {
+    let request_config = &RequestConfig {
         url: full_url_path,
         method: api_config.method.clone(),
         content_type: api_config.content_type.clone(),
     };
 
     let response = request_config.do_request(params, headers).await;
-
     if let Ok(response) = response {
         let data: Value = response.json().await.unwrap();
-        return Ok(request_config.extract_response(&data));
+        let response2  = request_config.extract_response(&data);
+        return Ok(response2);
     }
     Err(String::from(response.err().unwrap().to_string()))
 }
