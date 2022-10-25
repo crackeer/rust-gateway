@@ -1,3 +1,1 @@
-baidu = {host = "http://baidu.com", timeout = 1000}
-opensvc = {host = "http://i.test.com", timeout = 1000}
-340 = {host = "http://i.onn.com", timeout = 1000}
+test = {host = "http://i.test.com", timeout = 1000, data_key = "data", code_key = "code", message_key = "message", success_code = "0"}

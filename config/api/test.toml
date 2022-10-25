@@ -1,0 +1,2 @@
+simple = {path = "util/decode/work_code", method = "GET"}
+decode_work = {path = "util/decode/work_code", method = "GET", content_type = "application/json"}

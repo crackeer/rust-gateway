@@ -1,1 +1,0 @@
-simple = {path = "/simple", method = "post", content_type="application/json"}
