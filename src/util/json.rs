@@ -26,7 +26,7 @@ pub fn extract_json_value<'a>(input: Option<&'a Value>, parts: Vec<&str>, index:
 
     let obj = input.unwrap().as_object().unwrap();
     if parts.len() -1 ==  index {
-        return obj.get(parts[index]);
+        return obj.get(parts[index]).to_owned()
     }
 
     return extract_json_value(obj.get(parts[0]), parts, index + 1)

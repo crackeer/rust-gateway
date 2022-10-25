@@ -41,17 +41,18 @@ impl RequestConfig {
         let response = builder.send().await?;
         Ok(response)
     }
-    pub fn extract_response(&self, value: &Value) -> APIResponse {
+    pub fn extract_response<'a>(&self, value: Value) -> &APIResponse<'a> {
         let parts = vec![self.data_key.as_ref()];
-        if let Some(data) = extract_json_value(Some(value), parts, 0) {
-            return APIResponse {
-                data: Some(data.clone()),
+        let aa = Some(&value);
+        if let Some(data) = extract_json_value(aa, parts, 0) {
+            return &APIResponse {
+                data: Some(data),
                 code: 0,
                 message: String::from(""),
                 cost: 0,
             };
         }
-        return APIResponse {
+        return &APIResponse {
             data: None,
             code: 0,
             message: String::from(""),
@@ -81,12 +82,12 @@ fn build_query(data: &Option<Value>) -> String {
     query
 }
 
-pub async fn do_request(
+pub async fn do_request<'a>(
     service: String,
     api: String,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
-) -> Result<APIResponse, String> {
+) -> Result<&'a APIResponse<'a>, String> {
     let service_config = get_service(&service);
     if service_config.is_none() {
         return Err(String::from("No service specified"));
@@ -110,8 +111,8 @@ pub async fn do_request(
 
     let response = request_config.do_request(params, headers).await;
     if let Ok(response) = response {
-        let data: Value = response.json().await.unwrap();
-        let response2  = request_config.extract_response(&data);
+        let ddd: Value = response.json().await.unwrap();
+        let response2  = request_config.extract_response(ddd);
         return Ok(response2);
     }
     Err(String::from(response.err().unwrap().to_string()))

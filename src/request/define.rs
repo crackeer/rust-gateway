@@ -22,8 +22,8 @@ pub struct API {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Response {
-    pub data: Option<Value>,
+pub struct Response<'a> {
+    pub data: Option<&'a Value>,
     pub code: usize,
     pub message: String,
     pub cost:usize
