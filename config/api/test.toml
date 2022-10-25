@@ -1,2 +1,3 @@
 simple = {path = "util/decode/work_code", method = "GET"}
 decode_work = {path = "util/decode/work_code", method = "GET", content_type = "application/json"}
+database_tables = {path = "database/base/tables", method = "GET"}

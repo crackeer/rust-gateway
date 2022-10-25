@@ -1,9 +1,11 @@
+use crate::request::define::Response as APIResponse;
 use crate::request::request::do_request;
+
 use axum::{
     async_trait,
     body::{Bytes, HttpBody},
     extract::{FromRequest, Path, Query, RequestParts},
-    http::{header::CONTENT_TYPE, StatusCode, Uri},
+    http::{header::CONTENT_TYPE, StatusCode, Uri, response},
     response::{IntoResponse, Response},
     BoxError,
 };
@@ -87,6 +89,14 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    let response = do_request(params.service, params.api, params.params, params.header).await;
-    axum::Json(response)
+    let result = do_request(params.service, params.api, params.params, params.header).await;
+    if let Ok(response) = result {
+        return axum::Json(response);
+    }
+    axum::Json(APIResponse {
+        data: None,
+        code: 10001,
+        cost: 0,
+        message: result.err().unwrap(),
+    })
 }

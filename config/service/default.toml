@@ -1,1 +1,1 @@
-test = {host = "http://localhost:9200", timeout = 1000, data_key = "data", code_key = "code", message_key = "message", success_code = "0"}
+test = {host = "http://localhost:9000", timeout = 1000, data_key = "/data", code_key = "/code", message_key = "/message", success_code = "0"}

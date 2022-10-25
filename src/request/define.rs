@@ -10,8 +10,8 @@ pub struct Service {
     pub timeout: u32,
     pub data_key: String,
     pub code_key: String,
-    pub success_code_key: String,
-    pub error_message_key: String,
+    pub success_code: String,
+    pub message_key: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,9 +22,9 @@ pub struct API {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct Response<'a> {
-    pub data: Option<&'a Value>,
-    pub code: usize,
+pub struct Response {
+    pub data: Option<Value>,
+    pub code: u64,
     pub message: String,
     pub cost:usize
 }

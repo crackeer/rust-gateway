@@ -41,23 +41,9 @@ impl RequestConfig {
         let response = builder.send().await?;
         Ok(response)
     }
-    pub fn extract_response<'a>(&self, value: Value) -> &APIResponse<'a> {
-        let parts = vec![self.data_key.as_ref()];
-        let aa = Some(&value);
-        if let Some(data) = extract_json_value(aa, parts, 0) {
-            return &APIResponse {
-                data: Some(data),
-                code: 0,
-                message: String::from(""),
-                cost: 0,
-            };
-        }
-        return &APIResponse {
-            data: None,
-            code: 0,
-            message: String::from(""),
-            cost: 1,
-        };
+    pub fn extract_data<'a>(&self, value: Option<&'a Value>, key: String) -> Option<&'a Value> {
+        let parts = vec![key.as_ref()];
+        return extract_json_value(value, parts, 0);
     }
 }
 
@@ -82,12 +68,12 @@ fn build_query(data: &Option<Value>) -> String {
     query
 }
 
-pub async fn do_request<'a>(
+pub async fn do_request(
     service: String,
     api: String,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
-) -> Result<&'a APIResponse<'a>, String> {
+) -> Result<APIResponse, String> {
     let service_config = get_service(&service);
     if service_config.is_none() {
         return Err(String::from("No service specified"));
@@ -106,14 +92,21 @@ pub async fn do_request<'a>(
         url: full_url_path,
         method: api_config.method.clone(),
         content_type: api_config.content_type.clone(),
-        data_key: service_config.data_key,
+        data_key: service_config.data_key.clone(),
     };
 
     let response = request_config.do_request(params, headers).await;
     if let Ok(response) = response {
         let ddd: Value = response.json().await.unwrap();
-        let response2  = request_config.extract_response(ddd);
-        return Ok(response2);
+        let data_value = ddd.pointer(service_config.data_key.as_str()).unwrap().to_owned();
+        let code_value = ddd.pointer(service_config.code_key.as_str()).unwrap().to_owned();
+        let message_value = ddd.pointer(service_config.message_key.as_str()).unwrap().to_owned();
+        return Ok(APIResponse {
+            data: Some(data_value),
+            code: code_value.as_u64().unwrap(),
+            cost: 0,
+            message: message_value.as_str().unwrap().to_string(),
+        });
     }
     Err(String::from(response.err().unwrap().to_string()))
 }
