@@ -1,14 +1,17 @@
 use super::define::Response as APIResponse;
 use crate::container::api::{get_service, get_service_api};
 use crate::util::json::{extract_json_value, value_to_string};
+use axum::extract;
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::vec;
 
 pub struct RequestConfig {
     pub url: String,
     pub method: String,
     pub content_type: Option<String>,
+    pub data_key: String,
 }
 
 impl RequestConfig {
@@ -39,6 +42,15 @@ impl RequestConfig {
         Ok(response)
     }
     pub fn extract_response(&self, value: &Value) -> APIResponse {
+        let parts = vec![self.data_key.as_ref()];
+        if let Some(data) = extract_json_value(Some(value), parts, 0) {
+            return APIResponse {
+                data: Some(data.clone()),
+                code: 0,
+                message: String::from(""),
+                cost: 0,
+            };
+        }
         return APIResponse {
             data: None,
             code: 0,
@@ -93,6 +105,7 @@ pub async fn do_request(
         url: full_url_path,
         method: api_config.method.clone(),
         content_type: api_config.content_type.clone(),
+        data_key: service_config.data_key,
     };
 
     let response = request_config.do_request(params, headers).await;
