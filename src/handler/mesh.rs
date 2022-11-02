@@ -39,7 +39,7 @@ where
         return Ok(MeshParams {
             params: Some(data),
             header: Some(header),
-            path: req.uri().to_string(),
+            path: req.uri().path().to_string(),
         });
     }
 }
