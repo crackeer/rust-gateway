@@ -1,0 +1,6 @@
+config = [
+    [
+        {api="test/simple", params={abc="&(_root_/abc)"}, name="abc", recovery=false},
+        {api="test/simple", params={abc="&(_root_/abc)"}, name="abc2", recovery=false}
+    ]
+]
