@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Service {
@@ -26,7 +26,20 @@ pub struct Response {
     pub data: Option<Value>,
     pub code: u64,
     pub message: String,
-    pub cost:usize
+    pub cost: usize,
+}
+
+pub struct Router {
+    pub path: String,
+    pub method: String,
+    pub config: Vec<Vec<RouterRequestCell>>,
+}
+
+pub struct RouterRequestCell {
+    pub name: String,
+    pub api: String,
+    pub params: Option<HashMap<String, Value>>,
+    pub recovery: Option<bool>,
 }
 
 pub trait ServiceAPIFactory {
