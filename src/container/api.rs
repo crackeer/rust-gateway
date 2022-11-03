@@ -1,4 +1,4 @@
-use crate::request::define::{ServiceAPIFactory, Service, API};
+use crate::request::define::{ServiceAPIFactory, Service, API, Router};
 
 /* 
 use sqlx::{MySql, Pool};
@@ -11,6 +11,7 @@ use tokio::{time};
 lazy_static! {
     pub static ref SERVICE_MAP: Arc<Mutex<HashMap<String, Service>>> = Arc::new(Mutex::new(HashMap::new()));
     pub static ref API_MAP: Arc<Mutex<HashMap<String, API>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref ROUTER_MAP: Arc<Mutex<HashMap<String, Router>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
 /* 
@@ -61,7 +62,14 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env : String
                     }
                 }
             }
-        }        
+        }   
+        let mut router_map = ROUTER_MAP.try_lock().unwrap(); 
+        let router_list = factory.get_router_list();
+        if let Some(list) = router_list {
+            for (key, item) in list.iter() {
+                router_map.insert(key.clone(), item.clone());
+            }
+        }   
     }
 }
 

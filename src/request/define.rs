@@ -85,9 +85,9 @@ impl ServiceAPIFactory for FileFactory {
         }
     }
     fn get_router_list(&self) -> Option<HashMap<String, Router>> {
-        println!("{}", self.router_path);
+        //println!("{}", self.router_path);
         let file_list = util_file::get_file_list(self.router_path.clone(), String::from(".toml"));
-        println!("{}", file_list.join(","));
+        //println!("{}", file_list.join(","));
         let mut response: HashMap<String, Router> = HashMap::new();
 
         for file in file_list {
