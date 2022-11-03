@@ -1,8 +1,7 @@
+use crate::util::file as util_file;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::Read;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Service {
@@ -29,12 +28,12 @@ pub struct Response {
     pub cost: usize,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Router {
-    pub path: String,
-    pub method: String,
     pub config: Vec<Vec<RouterRequestCell>>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RouterRequestCell {
     pub name: String,
     pub api: String,
@@ -45,34 +44,29 @@ pub struct RouterRequestCell {
 pub trait ServiceAPIFactory {
     fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>>;
     fn get_api_list(&self, service: String) -> Option<HashMap<String, API>>;
+    fn get_router_list(&self) -> Option<HashMap<String, Router>>;
 }
 
 pub struct FileFactory {
     pub service_path: String,
     pub api_path: String,
+    pub router_path: String,
 }
 
 impl FileFactory {
-    pub fn new(service_path: String, api_path: String) -> FileFactory {
+    pub fn new(service_path: String, api_path: String, router_path: String) -> FileFactory {
         return FileFactory {
             service_path: service_path,
             api_path: api_path,
+            router_path: router_path,
         };
     }
-}
-
-fn read_file(path: &str) -> Result<String, std::io::Error> {
-    //println!("{}", path);
-    let mut result = File::open(path)?;
-    let mut content = String::from("");
-    result.read_to_string(&mut content)?;
-    Ok(content)
 }
 
 impl ServiceAPIFactory for FileFactory {
     fn get_api_list(&self, service: String) -> Option<HashMap<String, API>> {
         let full_path = format!("{}/{}.toml", self.api_path, service);
-        let content = read_file(full_path.as_str());
+        let content = util_file::read_file(full_path.as_str());
         if content.is_ok() {
             let decoded: HashMap<String, API> = toml::from_str(&content.unwrap()).unwrap();
             Some(decoded)
@@ -82,12 +76,26 @@ impl ServiceAPIFactory for FileFactory {
     }
     fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>> {
         let full_path = format!("{}/{}.toml", self.service_path, env);
-        let content = read_file(full_path.as_str());
+        let content = util_file::read_file(full_path.as_str());
         if content.is_ok() {
             let decoded: HashMap<String, Service> = toml::from_str(&content.unwrap()).unwrap();
             Some(decoded)
         } else {
             None
         }
+    }
+    fn get_router_list(&self) -> Option<HashMap<String, Router>> {
+        println!("{}", self.router_path);
+        let file_list = util_file::get_file_list(self.router_path.clone(), String::from(".toml"));
+        println!("{}", file_list.join(","));
+        let mut response: HashMap<String, Router> = HashMap::new();
+
+        for file in file_list {
+            if let Ok(content) = util_file::read_file(file.as_str()) {
+                let decoded: Router = toml::from_str(&content).unwrap();
+                response.insert(file.clone().strip_suffix(".toml").unwrap().strip_prefix(".").unwrap().to_string(), decoded);
+            }
+        }
+        Some(response)
     }
 }

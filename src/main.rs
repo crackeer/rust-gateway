@@ -8,15 +8,15 @@ mod util;
 #[macro_use]
 extern crate lazy_static;
 use axum::{
-    extract::Extension,
+    //extract::Extension,
     routing::{any, get, post},
     Router,
 };
-use container::pool::establish_mysql_connection;
+//use container::pool::establish_mysql_connection;
 use container::api::{load_service_api};
 use std::{net::SocketAddr, sync::Arc};
 use tracing_subscriber;
-use request::define::{FileFactory, ServiceAPIFactory};
+use request::define::{FileFactory};
 
 
 #[tokio::main]
@@ -25,17 +25,17 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     //let pool = establish_mysql_connection().await;
-    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"));
+    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"), String::from("./config/.router"));
     tokio::spawn(load_service_api(Arc::new(factory), String::from("default")));
 
     //tokio::spawn(load_api(Arc::new(pool.to_owned())));
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
         .route("/", get(handler::test::root))
         // `POST /users` goes to `create_user`
         .route("/users", post(handler::test::create_user))
         .route("/service/:env",  any(handler::service::get_service_list))
+        .route("/routers",  any(handler::service::get_router_list))
         .route("/relay/:service/:api", any(handler::proxy::relay))
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_mysql_data))
