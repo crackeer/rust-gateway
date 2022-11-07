@@ -12,24 +12,30 @@ pub struct RequestConfig {
     pub data_key: String,
 }
 
-impl RequestConfig {
+struct RequestClient;
+
+impl RequestClient {
+    pub fn new() -> Self {
+        RequestClient
+    }
     pub async fn do_request(
         &self,
+        config : &RequestConfig,
         value: Option<Value>,
         _headers: Option<HashMap<String, String>>,
     ) -> Result<Response, Error> {
         let client = reqwest::Client::new();
-        let mut builder: reqwest::RequestBuilder = client.get(&self.url);
+        let mut builder: reqwest::RequestBuilder = client.get(&config.url);
         let mut content_type: String = String::new();
-        if let Some(value) = self.content_type.as_ref() {
+        if let Some(value) = config.content_type.as_ref() {
             content_type = value.clone();
         }
-        if self.method == "GET" {
-            let full_url = format!("{}?{}", self.url, build_query(&value));
+        if config.method == "GET" {
+            let full_url = format!("{}?{}", config.url, build_query(&value));
             println!("{}", full_url);
             builder = client.get(&full_url);
-        } else if self.method == "POST" {
-            builder = client.post(&self.url);
+        } else if config.method == "POST" {
+            builder = client.post(&config.url);
             if let Some(params) = value {
                 if content_type == "application/json" {
                     builder = builder.json(&params);
@@ -89,7 +95,7 @@ pub async fn do_request(
         data_key: service_config.data_key.clone(),
     };
 
-    let response = request_config.do_request(params, headers).await;
+    let response = RequestClient::new().do_request(request_config, params, headers).await;
     if let Ok(response) = response {
         let ddd: Value = response.json().await.unwrap();
         let data_value = ddd.pointer(service_config.data_key.as_str()).unwrap().to_owned();
