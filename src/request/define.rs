@@ -93,9 +93,17 @@ impl ServiceAPIFactory for FileFactory {
         for file in file_list {
             if let Ok(content) = util_file::read_file(file.as_str()) {
                 let decoded: Router = toml::from_str(&content).unwrap();
-                response.insert(file.clone().strip_suffix(".toml").unwrap().strip_prefix(".").unwrap().to_string(), decoded);
+                response.insert(trim_router_path(&file, &self.router_path, ".toml"), decoded);
             }
         }
         Some(response)
     }
+}
+
+fn trim_router_path(path : &String, prefix: &str, suffix : &str) ->String  {
+    if path.len() < 1 {
+        return String::new();
+    }
+    println!("{}-{}-{}", path,prefix, suffix);
+    path.clone().strip_prefix(prefix).unwrap().strip_suffix(suffix).unwrap().to_string().replace("\\", "/")
 }

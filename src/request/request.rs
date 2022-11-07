@@ -1,11 +1,9 @@
 use super::define::Response as APIResponse;
 use crate::container::api::{get_service, get_service_api};
-use crate::util::json::{extract_json_value, value_to_string};
-use axum::extract;
+use crate::util::json::{value_to_string};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::vec;
 
 pub struct RequestConfig {
     pub url: String,
@@ -40,10 +38,6 @@ impl RequestConfig {
         }
         let response = builder.send().await?;
         Ok(response)
-    }
-    pub fn extract_data<'a>(&self, value: Option<&'a Value>, key: String) -> Option<&'a Value> {
-        let parts = vec![key.as_ref()];
-        return extract_json_value(value, parts, 0);
     }
 }
 

@@ -5,7 +5,7 @@ use crate::util::request as util_request;
 use axum::{
     async_trait,
     body::{ HttpBody},
-    extract::{FromRequest, Path, Query, RequestParts},
+    extract::{FromRequest, Path, RequestParts},
     response::{IntoResponse, Response},
     BoxError,
 };

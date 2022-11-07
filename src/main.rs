@@ -25,7 +25,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     //let pool = establish_mysql_connection().await;
-    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"), String::from("./config/.router"));
+    let factory  = FileFactory::new(String::from("./config/service"), String::from("./config/api"), String::from("./config/router"));
     tokio::spawn(load_service_api(Arc::new(factory), String::from("default")));
 
     //tokio::spawn(load_api(Arc::new(pool.to_owned())));

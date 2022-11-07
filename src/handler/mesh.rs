@@ -1,15 +1,17 @@
 use crate::util::request as util_request;
+use crate::request::define::{FileFactory, ServiceAPIFactory};
+use crate::container::api::{ get_router_config};
 
 use axum::{
     async_trait,
-    body::{Bytes, HttpBody},
+    body::{ HttpBody},
     extract::{FromRequest, Path, Query, RequestParts},
     http::{header::CONTENT_TYPE, response, StatusCode, Uri},
     response::{IntoResponse, Response},
     BoxError,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{ Value};
 use std::{
     collections::{hash_map::RandomState, HashMap},
     io::Read,
@@ -45,7 +47,11 @@ where
 }
 
 pub async fn mesh(params: MeshParams) -> impl IntoResponse {
-    axum::Json(params)
+    //axum::Json(params)
+
+    println!("{}", "Simple");
+    let router_config  = get_router_config(&params.path);
+    axum::Json(router_config)
     /*
     let result = do_request(params.service, params.api, params.params, params.header).await;
     if let Ok(response) = result {
