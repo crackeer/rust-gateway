@@ -5,12 +5,16 @@ use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
 use crate::request::define::{RouterRequestCell};
+use std::sync::{Mutex};
 
 pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<APIResponse, String> {
+
+    for cell in cells {
+    }
     let service_config = get_service(&service);
     if service_config.is_none() {
         return Err(String::from("No service specified"));

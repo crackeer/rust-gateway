@@ -19,7 +19,7 @@ use std::{
 pub struct Params {
     service: String,
     api: String,
-    params: Option<Value>,
+    params: Option<HashMap<String, Value>>,
     header: Option<HashMap<String, String>>,
 }
 
@@ -37,7 +37,7 @@ where
         let result = Path::from_request(req).await;
 
         let header: HashMap<String, String> = util_request::extract_header(req);
-        let data: Value = util_request::extract_parameter_all(req).await;
+        let data: HashMap<String, Value> = util_request::extract_parameter_all(req).await;
         let path_params: Path<Params> = result.unwrap();
         let Path(tmp_params) = path_params;
         

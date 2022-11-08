@@ -20,7 +20,7 @@ use std::{
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MeshParams {
     path: String,
-    params: Option<Value>,
+    params: Option<HashMap<String, Value>>,
     header: Option<HashMap<String, String>>,
 }
 
@@ -36,7 +36,7 @@ where
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
         let header: HashMap<String, String> = util_request::extract_header(req);
-        let data: Value = util_request::extract_parameter_all(req).await;
+        let data: HashMap<String, Value> = util_request::extract_parameter_all(req).await;
 
         return Ok(MeshParams {
             params: Some(data),
