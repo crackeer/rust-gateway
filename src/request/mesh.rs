@@ -6,7 +6,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use crate::request::define::{RouterRequestCell};
 
-pub async fn mesh(
+pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,

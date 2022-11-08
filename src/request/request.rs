@@ -4,48 +4,46 @@ use crate::util::json::{value_to_string};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::hash::Hash;
 
-pub struct RequestConfig {
+pub struct APIConfig {
     pub url: String,
     pub method: String,
     pub content_type: Option<String>,
     pub data_key: String,
 }
 
-struct RequestClient;
+pub struct RequestWrapper {
+    pub api_config: APIConfig,
+    pub params: Option<Value>,
+    pub headers: Option<HashMap<String, String>>,
+}
 
-impl RequestClient {
-    pub fn new() -> Self {
-        RequestClient
-    }
-    pub async fn do_request(
-        &self,
-        config : &RequestConfig,
-        value: Option<Value>,
-        _headers: Option<HashMap<String, String>>,
+pub async fn do_simple_request(
+        wrapper : &RequestWrapper,
     ) -> Result<Response, Error> {
-        let client = reqwest::Client::new();
-        let mut builder: reqwest::RequestBuilder = client.get(&config.url);
-        let mut content_type: String = String::new();
-        if let Some(value) = config.content_type.as_ref() {
-            content_type = value.clone();
-        }
-        if config.method == "GET" {
-            let full_url = format!("{}?{}", config.url, build_query(&value));
-            println!("{}", full_url);
-            builder = client.get(&full_url);
-        } else if config.method == "POST" {
-            builder = client.post(&config.url);
-            if let Some(params) = value {
-                if content_type == "application/json" {
-                    builder = builder.json(&params);
-                }
+    let client = reqwest::Client::new();
+    let mut builder: reqwest::RequestBuilder = client.get(&wrapper.api_config.url);
+    let mut content_type: String = String::new();
+    if let Some(value) = wrapper.api_config.content_type.as_ref() {
+        content_type = value.clone();
+    }
+    if wrapper.api_config.method == "GET" {
+        let full_url = format!("{}?{}", wrapper.api_config.url, build_query(&wrapper.params));
+        println!("{}", full_url);
+        builder = client.get(&full_url);
+    } else if wrapper.api_config.method == "POST" {
+        builder = client.post(&wrapper.api_config.url);
+        if let Some(params) = &wrapper.params {
+            if content_type == "application/json" {
+                builder = builder.json(&params);
             }
         }
-        let response = builder.send().await?;
-        Ok(response)
     }
+    let response = builder.send().await?;
+    Ok(response)
 }
+
 
 fn build_query(data: &Option<Value>) -> String {
     if data.is_none() {
@@ -88,14 +86,18 @@ pub async fn do_request(
 
     let full_url_path = format!("{}/{}", service_config.host, api_config.path);
 
-    let request_config = &RequestConfig {
-        url: full_url_path,
-        method: api_config.method.clone(),
-        content_type: api_config.content_type.clone(),
-        data_key: service_config.data_key.clone(),
+    let wrapper = &RequestWrapper{
+        api_config: APIConfig {
+            url: full_url_path,
+            method: api_config.method.clone(),
+            content_type: api_config.content_type.clone(),
+            data_key: service_config.data_key.clone(),
+        },
+        params : params,
+        headers : headers,
     };
 
-    let response = RequestClient::new().do_request(request_config, params, headers).await;
+    let response = do_simple_request(wrapper).await;
     if let Ok(response) = response {
         let ddd: Value = response.json().await.unwrap();
         let data_value = ddd.pointer(service_config.data_key.as_str()).unwrap().to_owned();
