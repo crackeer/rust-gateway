@@ -1,53 +1,78 @@
-use super::define::Response as APIResponse;
-use crate::container::api::{get_service, get_service_api};
-use crate::util::json::{value_to_string};
-use reqwest::{Error, Response};
+use super::define::Response;
+use super::request::do_request;
+use crate::request::define::RouterRequestCell;
+use reqwest::Error;
 use serde_json::Value;
 use std::collections::HashMap;
-use crate::request::define::{RouterRequestCell};
-use std::sync::{Mutex};
+use std::sync::{Arc, Mutex};
+use tokio::spawn;
+use tokio::sync::mpsc;
+
+pub async fn do_multi_request(
+    wrappers: &Vec<RouterRequestCell>,
+) -> Result<HashMap<String, Response>, Error> {
+    //let mut response: Arc<Mutex<HashMap<String, APIResponse>>> = Arc::new(Mutex::new(HashMap::new()));
+    let mut response: HashMap<String, Response> = HashMap::new();
+    let mut childs = vec![];
+    let (tx, mut rx) = mpsc::channel(32);
+    for req in wrappers.iter() {
+        let service = req.api;
+        let api = req.api;
+        let response_clone = response.clone();
+        let headers: HashMap<String, String> = HashMap::new();
+        let c = spawn(async move {
+            let result = do_request(service, api, req.params, Some(headers)).await;
+            tx.clone().send(result);
+            /*
+            let mut vs = response_clone.lock().unwrap();
+            if let Ok(res) = do_request(service, api, req.params, Some(headers)).await {
+                vs.insert(req.name.clone(), res)
+            } else {
+                vs.insert(req.name.clone(), APIResponse{
+                    message: "error".to_string(),
+                    data : Some(Value::from(String::from("simple error"))),
+                    code : 0,
+                    cost : 0,
+                })
+            }
+            */
+        });
+        childs.push(c);
+    }
+    while let Some(message) = rx.recv().await {
+        if let Ok(res) = message {
+            response.insert(String::from("Some"), res);
+        } else {
+            response.insert(
+                String::from("Error"),
+                Response {
+                    message: "error".to_string(),
+                    data: Some(Value::from(String::from("simple error"))),
+                    code: 0,
+                    cost: 0,
+                },
+            );
+        }
+    }
+
+    Ok(response)
+}
 
 pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
-) -> Result<APIResponse, String> {
+) -> Result<HashMap<String, Response>, String> {
+    let mut response: HashMap<String, Response> = HashMap::new();
 
     for cell in cells {
+        let result = do_multi_request(&cell).await;
+        if let Ok(res) = result {
+            for (key, value) in result.iter() {
+                response.insert(key, value);
+            }
+        }
     }
-    let service_config = get_service(&service);
-    if service_config.is_none() {
-        return Err(String::from("No service specified"));
-    }
-    let service_config = service_config.unwrap();
 
-    let api_config = get_service_api(&service, &api);
-    if api_config.is_none() {
-        return Err(String::from("No service api specified"));
-    }
-    let api_config = api_config.unwrap();
-
-    let full_url_path = format!("{}/{}", service_config.host, api_config.path);
-
-    let request_config = &RequestConfig {
-        url: full_url_path,
-        method: api_config.method.clone(),
-        content_type: api_config.content_type.clone(),
-        data_key: service_config.data_key.clone(),
-    };
-
-    let response = request_config.do_request(params, headers).await;
-    if let Ok(response) = response {
-        let ddd: Value = response.json().await.unwrap();
-        let data_value = ddd.pointer(service_config.data_key.as_str()).unwrap().to_owned();
-        let code_value = ddd.pointer(service_config.code_key.as_str()).unwrap().to_owned();
-        let message_value = ddd.pointer(service_config.message_key.as_str()).unwrap().to_owned();
-        return Ok(APIResponse {
-            data: Some(data_value),
-            code: code_value.as_u64().unwrap(),
-            cost: 0,
-            message: message_value.as_str().unwrap().to_string(),
-        });
-    }
-    Err(String::from(response.err().unwrap().to_string()))
+    Ok(response)
 }

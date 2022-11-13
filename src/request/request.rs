@@ -1,12 +1,11 @@
 use super::define::Response as APIResponse;
 use crate::container::api::{get_service, get_service_api};
-use crate::util::json::value_to_string;
+use crate::util::request::build_query;
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
 use crate::request::define::{RouterRequestCell};
-use std::sync::{Arc, Mutex};
-use std::thread;
+
 
 pub struct APIConfig {
     pub url: String,
@@ -49,50 +48,8 @@ pub async fn do_simple_request(wrapper: &RequestWrapper) -> Result<Response, Err
     Ok(response)
 }
 
-/* 
-pub async fn do_multi_request(wrappers: &Vec<RouterRequestCell>) -> Result<Response, Error> {
-    let mut response : Arc<Mutex<HashMap<String, Response>>>= Arc::new(Mutex::new(HashMap::new()));
-    let mut childs = vec![];
-    for req in wrappers.iter() {
-        let service = req.api;
-        let api = req.api;
-        let response_clone = response.clone();
-        let headers : HashMap<String, String>= HashMap::new();
-        let c = thread::spawn( || {
-            let mut vs = response_clone.lock().unwrap();
-            if let Ok(res) = do_request(service, api, req.params, Some(headers)).await {
-                 vs.insert(req.name.clone(), res)
-            } else {
 
-            }
-           
-        });
-        childs.push(c);
-    }
-     for c in childs {
-        c.join().unwrap();
-    }
 
-    Err(Error::new()
-}
-*/
-
-fn build_query(data: &Option<HashMap<String, Value>>) -> String {
-    if data.is_none() {
-        return String::new();
-    }
-    let data = data.clone().unwrap();
-
-    let mut query = String::new();
-    for (key, value) in data.iter() {
-        if query.is_empty() {
-            query.push_str(&format!("{}={}", key, value_to_string(value)));
-        } else {
-            query.push_str(&format!("&{}={}", key, value_to_string(value)));
-        }
-    }
-    query
-}
 
 pub async fn do_request(
     service: String,

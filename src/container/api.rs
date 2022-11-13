@@ -69,9 +69,9 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env: String)
         let router_list = factory.get_router_list();
        
         if let Some(list) = router_list {
-             println!("{}", list.len());
+             //println!("{}", list.len());
             for (key, item) in list.iter() {
-                println!("{}", key);
+                //println!("{}", key);
                 router_map.insert(key.clone(), item.clone());
             }
         }

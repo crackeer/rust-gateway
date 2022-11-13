@@ -1,4 +1,5 @@
-use serde_json::{json, Value};
+use serde_json::{ Value};
+use super::json::value_to_string;
 use axum::{
     body::{Bytes, HttpBody},
     extract::{FromRequest, Query, RequestParts},
@@ -80,5 +81,22 @@ B::Error: Into<BoxError>,
     }
 
     return get_data
+}
+
+pub fn build_query(data: &Option<HashMap<String, Value>>) -> String {
+    if data.is_none() {
+        return String::new();
+    }
+    let data = data.clone().unwrap();
+
+    let mut query = String::new();
+    for (key, value) in data.iter() {
+        if query.is_empty() {
+            query.push_str(&format!("{}={}", key, value_to_string(value)));
+        } else {
+            query.push_str(&format!("&{}={}", key, value_to_string(value)));
+        }
+    }
+    query
 }
 
