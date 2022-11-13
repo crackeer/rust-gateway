@@ -8,7 +8,7 @@ use axum::{
     extract::{FromRequest, Path, Query, RequestParts},
     http::{header::CONTENT_TYPE, response, StatusCode, Uri},
     response::{IntoResponse, Response},
-    BoxError,
+    BoxError, routing::patch_service,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -50,7 +50,7 @@ pub async fn mesh(params: MeshParams) -> impl IntoResponse {
     println!("{}", "Simple");
     let router_config = get_router_config(&params.path);
     if let Some(router) = router_config {
-        if let Ok(result) = do_mesh_request(router.config, params.params, params.header) {
+        if let Ok(result) = do_mesh_request(router.config, Some(Value::from("ss")), params.header).await {
             return axum::Json(result);
         }
     }

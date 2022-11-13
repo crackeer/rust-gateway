@@ -16,13 +16,14 @@ pub async fn do_multi_request(
     let mut childs = vec![];
     let (tx, mut rx) = mpsc::channel(32);
     for req in wrappers.iter() {
-        let service = req.api;
-        let api = req.api;
-        let response_clone = response.clone();
+        let service = req.api.clone();
+        let api = req.api.clone();
         let headers: HashMap<String, String> = HashMap::new();
+        let tmp = tx.clone();
+        let params =  req.params.clone();
         let c = spawn(async move {
-            let result = do_request(service, api, req.params, Some(headers)).await;
-            tx.clone().send(result);
+            let result = do_request(service, api, params, Some(headers)).await;
+            tmp.clone().send(result);
             /*
             let mut vs = response_clone.lock().unwrap();
             if let Ok(res) = do_request(service, api, req.params, Some(headers)).await {
@@ -68,8 +69,8 @@ pub async fn do_mesh_request(
     for cell in cells {
         let result = do_multi_request(&cell).await;
         if let Ok(res) = result {
-            for (key, value) in result.iter() {
-                response.insert(key, value);
+            for (key, value) in res.iter() {
+                response.insert(key.clone(), value.clone());
             }
         }
     }
