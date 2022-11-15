@@ -104,6 +104,6 @@ fn trim_router_path(path : &String, prefix: &str, suffix : &str) ->String  {
     if path.len() < 1 {
         return String::new();
     }
-    println!("{}-{}-{}", path,prefix, suffix);
+    //println!("{}-{}-{}", path,prefix, suffix);
     path.clone().strip_prefix(prefix).unwrap().strip_suffix(suffix).unwrap().to_string().replace("\\", "/")
 }

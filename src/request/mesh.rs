@@ -4,70 +4,66 @@ use crate::request::define::RouterRequestCell;
 use reqwest::Error;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use tokio::spawn;
 use tokio::sync::mpsc;
 
 pub async fn do_multi_request(
     wrappers: &Vec<RouterRequestCell>,
+    headers : &Option<HashMap<String, String>>,
 ) -> Result<HashMap<String, Response>, Error> {
-    //let mut response: Arc<Mutex<HashMap<String, APIResponse>>> = Arc::new(Mutex::new(HashMap::new()));
     let mut response: HashMap<String, Response> = HashMap::new();
     let mut childs = vec![];
     let (tx, mut rx) = mpsc::channel(32);
+    let mut total = wrappers.len();
     for req in wrappers.iter() {
-        let service = req.api.clone();
-        let api = req.api.clone();
-        let headers: HashMap<String, String> = HashMap::new();
+        let parts : Vec<&str>= req.api.split('/').collect();
+        let service = parts[0].to_string();
+        let api = parts[1].to_string();
+        let headers  = headers.clone();
         let tmp = tx.clone();
         let params =  req.params.clone();
         let c = spawn(async move {
-            let result = do_request(service, api, params, Some(headers)).await;
-            tmp.clone().send(result);
-            /*
-            let mut vs = response_clone.lock().unwrap();
-            if let Ok(res) = do_request(service, api, req.params, Some(headers)).await {
-                vs.insert(req.name.clone(), res)
-            } else {
-                vs.insert(req.name.clone(), APIResponse{
-                    message: "error".to_string(),
-                    data : Some(Value::from(String::from("simple error"))),
-                    code : 0,
-                    cost : 0,
-                })
+            let result = do_request(service, api, params, headers).await;
+            println!("Request End{}", result.is_err());
+            if let Err(err) = tmp.clone().send(result).await {
+                println!("request error{}", err.to_string())
             }
-            */
         });
         childs.push(c);
     }
-    while let Some(message) = rx.recv().await {
-        if let Ok(res) = message {
-            response.insert(String::from("Some"), res);
-        } else {
-            response.insert(
-                String::from("Error"),
-                Response {
-                    message: "error".to_string(),
-                    data: Some(Value::from(String::from("simple error"))),
-                    code: 0,
-                    cost: 0,
-                },
-            );
+    
+    while total > 0{
+        if let Some(message) = rx.recv().await {
+            total = total-1;
+            println!("{}", "recv message");
+            if let Ok(res) = message {
+                response.insert(String::from("Some"), res);
+            } else {
+                response.insert(
+                    String::from("Error"),
+                    Response {
+                        message: "error".to_string(),
+                        data: Some(Value::from(String::from("simple error"))),
+                        code: 0,
+                        cost: 0,
+                    },
+                );
+            }
         }
     }
-
+    
     Ok(response)
 }
 
 pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
-    params: Option<Value>,
+    _params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<HashMap<String, Response>, String> {
     let mut response: HashMap<String, Response> = HashMap::new();
 
     for cell in cells {
-        let result = do_multi_request(&cell).await;
+        let result = do_multi_request(&cell, &headers).await;
         if let Ok(res) = result {
             for (key, value) in res.iter() {
                 response.insert(key.clone(), value.clone());

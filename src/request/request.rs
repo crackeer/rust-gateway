@@ -4,8 +4,6 @@ use crate::util::request::build_query;
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
-use crate::request::define::{RouterRequestCell};
-
 
 pub struct APIConfig {
     pub url: String,
@@ -98,6 +96,7 @@ pub async fn do_request(
             .pointer(service_config.message_key.as_str())
             .unwrap()
             .to_owned();
+        println!("response:{}", message_value);
         return Ok(APIResponse {
             data: Some(data_value),
             code: code_value.as_u64().unwrap(),

@@ -1,6 +1,6 @@
 config = [
     [
-        {api="test/simple", params={abc="&(_root_/abc)"}, name="abc", recovery=false},
-        {api="test/simple", params={abc="&(_root_/abc)"}, name="abc2", recovery=false}
+        {api="test/database_tables", params={abc="simple1"}, name="abc1", recovery=false},
+        {api="test/database_tables", params={abc="simple2"}, name="abc2", recovery=false}
     ]
 ]
