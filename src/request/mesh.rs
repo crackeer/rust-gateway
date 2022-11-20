@@ -23,7 +23,7 @@ pub async fn do_multi_request(
         let api = parts[1].to_string();
         let headers = headers.clone();
         let tmp = tx.clone();
-        let real_params = extract_value(params.clone().unwrap(), req.params.clone().unwrap());
+        let real_params = extract_value(&params.clone().unwrap(), &req.params.clone().unwrap());
         let name = req.name.clone();
         let c = spawn(async move {
             let result = do_request(service, api, real_params, headers, name).await;

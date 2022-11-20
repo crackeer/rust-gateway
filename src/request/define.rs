@@ -95,6 +95,7 @@ impl ServiceAPIFactory for FileFactory {
             if let Ok(content) = util_file::read_file(file.as_str()) {
                 let decoded: Router = toml::from_str(&content).unwrap();
                 response.insert(trim_router_path(&file, &self.router_path, ".toml"), decoded);
+                
             }
         }
         Some(response)

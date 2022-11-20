@@ -98,7 +98,7 @@ pub fn get_service_api(name: &String, api: &String) -> Option<API> {
 
 pub fn get_router_config(path: &String) -> Option<Router> {
     let router_map = ROUTER_MAP.clone();
-    let locker = router_map.try_lock().unwrap();
+    let locker = router_map.lock().unwrap();
     if let Some(data) = locker.get(&format!("{}", path)) {
         return Some(data.clone());
     }
