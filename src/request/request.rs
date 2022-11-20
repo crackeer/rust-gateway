@@ -1,10 +1,10 @@
 use super::define::Response as APIResponse;
 use crate::container::api::{get_service, get_service_api};
+use crate::util::json::{get_json_value, get_json_value_string};
 use crate::util::request::build_query;
 use reqwest::{Error, Response};
 use serde_json::Value;
 use std::collections::HashMap;
-
 pub struct APIConfig {
     pub url: String,
     pub method: String,
@@ -60,6 +60,16 @@ pub async fn do_request(
 
     let api_config = get_service_api(&service, &api);
     if api_config.is_none() {
+        /*
+         return Ok(APIResponse {
+            name : name.clone(),
+            data: None,
+            code: 0,
+            cost: 0,
+            business_code: String::from(""),
+            message: message_value.unwrap().to_string(),
+        });
+        */
         return Err(String::from("No service api specified"));
     }
     let api_config = api_config.unwrap();
@@ -79,26 +89,18 @@ pub async fn do_request(
 
     let response = do_simple_request(wrapper).await;
     if let Ok(response) = response {
-        let ddd: Value = response.json().await.unwrap();
-        let data_value = ddd
-            .pointer(service_config.data_key.as_str())
-            .unwrap()
-            .to_owned();
-        let code_value = ddd
-            .pointer(service_config.code_key.as_str())
-            .unwrap()
-            .to_owned();
-        let message_value = ddd
-            .pointer(service_config.message_key.as_str())
-            .unwrap()
-            .to_owned();
-        println!("response:{}", message_value);
+        if response.status() != 200 {}
+        let json_value: Value = response.json().await.unwrap();
+        let data_value = get_json_value(&json_value, service_config.data_key.as_str());
+        let code_value = get_json_value_string(&json_value, service_config.data_key.as_str());
+        let message_value = get_json_value(&json_value, service_config.message_key.as_str());
         return Ok(APIResponse {
-            name : name.clone(),
-            data: Some(data_value),
-            code: code_value.as_u64().unwrap(),
+            name: name.clone(),
+            data: data_value,
+            code: 0,
             cost: 0,
-            message: message_value.as_str().unwrap().to_string(),
+            business_code: code_value,
+            message: message_value.unwrap().to_string(),
         });
     }
     Err(String::from(response.err().unwrap().to_string()))

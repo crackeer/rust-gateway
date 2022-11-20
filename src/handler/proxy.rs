@@ -58,8 +58,9 @@ pub async fn relay(params: Params) -> impl IntoResponse {
     axum::Json(APIResponse {
         name: String::from("simple"),
         data: None,
-        code: 10001,
+        code: 1,
         cost: 0,
+        business_code:String::from(""),
         message: result.err().unwrap(),
     })
 }

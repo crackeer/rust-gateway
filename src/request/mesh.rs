@@ -50,6 +50,7 @@ pub async fn do_multi_request(
                         data: Some(Value::from(String::from("simple error"))),
                         code: 0,
                         cost: 0,
+                        business_code:String::from(""),
                     },
                 );
             }

@@ -44,6 +44,13 @@ pub fn get_json_value(src_input: &Value, path : &str) -> Option<Value> {
     None
 }
 
+pub fn get_json_value_string(src_input: &Value, path : &str) -> String {
+    if let Some(value) = get_json_value(src_input, path) {
+        return value_to_string(&value);
+    }
+    String::from("")
+}
+
 pub fn extract_value(src_input: &Value, dest_value: &Value) -> Option<Value> {
     if dest_value.is_string() {
         let path = value_to_string(&dest_value);
