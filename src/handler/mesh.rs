@@ -20,7 +20,7 @@ use std::{
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MeshParams {
     path: String,
-    params: Option<HashMap<String, Value>>,
+    params: Option<Value>,
     header: Option<HashMap<String, String>>,
 }
 
@@ -36,7 +36,7 @@ where
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
         let header: HashMap<String, String> = util_request::extract_header(req);
-        let data: HashMap<String, Value> = util_request::extract_parameter_all(req).await;
+        let data: Value = util_request::extract_parameter_all(req).await;
 
         return Ok(MeshParams {
             params: Some(data),
@@ -50,23 +50,9 @@ pub async fn mesh(params: MeshParams) -> impl IntoResponse {
     println!("{}", "Simple");
     let router_config = get_router_config(&params.path);
     if let Some(router) = router_config {
-        if let Ok(result) = do_mesh_request(router.config, Some(Value::from("ss")), params.header).await {
+        if let Ok(result) = do_mesh_request(router.config, params.params, params.header).await {
             return axum::Json(result);
         }
     }
     axum::Json(HashMap::new())
-    //axum::Json(router_config)
-
-    /*
-    let result = do_request(params.service, params.api, params.params, params.header).await;
-    if let Ok(response) = result {
-        return axum::Json(response);
-    }
-    axum::Json(APIResponse {
-        data: None,
-        code: 10001,
-        cost: 0,
-        message: result.err().unwrap(),
-    })
-    */
 }

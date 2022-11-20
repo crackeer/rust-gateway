@@ -37,7 +37,7 @@ pub struct Router {
 pub struct RouterRequestCell {
     pub name: String,
     pub api: String,
-    pub params: Option<HashMap<String, Value>>,
+    pub params: Option<Value>,
     pub recovery: Option<bool>,
 }
 

@@ -14,7 +14,7 @@ pub struct APIConfig {
 
 pub struct RequestWrapper {
     pub api_config: APIConfig,
-    pub params: Option<HashMap<String, Value>>,
+    pub params: Option<Value>,
     pub headers: Option<HashMap<String, String>>,
     pub name: String,
 }
@@ -52,7 +52,7 @@ pub async fn do_simple_request(wrapper: &RequestWrapper) -> Result<Response, Err
 pub async fn do_request(
     service: String,
     api: String,
-    params: Option<HashMap<String, Value>>,
+    params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<APIResponse, String> {
     let service_config = get_service(&service);

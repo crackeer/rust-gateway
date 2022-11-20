@@ -1,4 +1,4 @@
-use serde_json::{ Value};
+use serde_json::{json, Value};
 use super::json::value_to_string;
 use axum::{
     body::{Bytes, HttpBody},
@@ -27,28 +27,30 @@ B::Error: Into<BoxError>,
     return header;
 }
 
-pub async fn extract_parameter_from_get<B>(req: &mut RequestParts<B>) -> HashMap<String, Value> where 
+pub async fn extract_parameter_from_get<B>(req: &mut RequestParts<B>) -> Value where 
 B: Send,
 B: HttpBody + Send,
 B::Data: Send,
 B::Error: Into<BoxError>,
 {
-    let mut object : HashMap<String, Value>= HashMap::new();
+    let mut object : Value = json!({});
+    
+    //let mut object : HashMap<String, Value>= HashMap::new();
     let query: Query<HashMap<String, String, RandomState>> = Query::from_request(req).await.unwrap();
     for (key, value) in query.iter() {
-        object.insert(String::from(key), Value::String(value.clone()));
+        object.as_object_mut().unwrap().insert(String::from(key), Value::String(value.clone()));
     }
     return object
 }
 
-async fn extract_parameter_from_post<B>(req: &mut RequestParts<B>) -> HashMap<String, Value> where 
+async fn extract_parameter_from_post<B>(req: &mut RequestParts<B>) -> Value where 
 B: Send,
 B: HttpBody + Send,
 B::Data: Send,
 B::Error: Into<BoxError>,
 {
 
-    let mut object : HashMap<String, Value>= HashMap::new();
+    let mut object : Value = json!({});
     let content_type_header = req.headers().get(CONTENT_TYPE);
     let content_type = content_type_header.and_then(|value| value.to_str().ok());
 
@@ -59,7 +61,7 @@ B::Error: Into<BoxError>,
                 let post_data: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
                 if let Value::Object(post_map) = post_data {
                     for (key, value) in post_map.iter() {
-                        object.insert(String::from(key), value.clone());
+                        object.as_object_mut().unwrap().insert(String::from(key), value.clone());
                     }
                 }
             }
@@ -68,29 +70,29 @@ B::Error: Into<BoxError>,
     return object
 }
 
-pub async fn extract_parameter_all<B>(req: &mut RequestParts<B>) -> HashMap<String, Value> where 
+pub async fn extract_parameter_all<B>(req: &mut RequestParts<B>) -> Value where 
 B: Send,
 B: HttpBody + Send,
 B::Data: Send,
 B::Error: Into<BoxError>,
 {
-    let mut get_data: HashMap<String, Value> = extract_parameter_from_get(req).await;
-    let post_data: HashMap<String, Value> = extract_parameter_from_post(req).await;
-    for (key, value) in post_data.iter() {
-        get_data.insert(String::from(key), value.clone());
+    let mut get_data: Value = extract_parameter_from_get(req).await;
+    let post_data: Value = extract_parameter_from_post(req).await;
+    for (key, value) in post_data.as_object().unwrap().iter() {
+        get_data.as_object_mut().unwrap().insert(String::from(key), value.clone());
     }
 
     return get_data
 }
 
-pub fn build_query(data: &Option<HashMap<String, Value>>) -> String {
+pub fn build_query(data: &Option<Value>) -> String {
     if data.is_none() {
         return String::new();
     }
     let data = data.clone().unwrap();
 
     let mut query = String::new();
-    for (key, value) in data.iter() {
+    for (key, value) in data.as_object().unwrap().iter() {
         if query.is_empty() {
             query.push_str(&format!("{}={}", key, value_to_string(value)));
         } else {

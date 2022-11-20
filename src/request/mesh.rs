@@ -7,8 +7,10 @@ use std::collections::HashMap;
 use tokio::spawn;
 use tokio::sync::mpsc;
 
+
 pub async fn do_multi_request(
     wrappers: &Vec<RouterRequestCell>,
+    params : Option<Value>,
     headers : &Option<HashMap<String, String>>,
 ) -> Result<HashMap<String, Response>, Error> {
     let mut response: HashMap<String, Response> = HashMap::new();
@@ -21,9 +23,9 @@ pub async fn do_multi_request(
         let api = parts[1].to_string();
         let headers  = headers.clone();
         let tmp = tx.clone();
-        let params =  req.params.clone();
+        let real_params =  params.clone();
         let c = spawn(async move {
-            let result = do_request(service, api, params, headers).await;
+            let result = do_request(service, api, real_params, headers).await;
             println!("Request End{}", result.is_err());
             if let Err(err) = tmp.clone().send(result).await {
                 println!("request error{}", err.to_string())
@@ -57,13 +59,13 @@ pub async fn do_multi_request(
 
 pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
-    _params: Option<Value>,
+    params: Option<Value>,
     headers: Option<HashMap<String, String>>,
 ) -> Result<HashMap<String, Response>, String> {
     let mut response: HashMap<String, Response> = HashMap::new();
 
     for cell in cells {
-        let result = do_multi_request(&cell, &headers).await;
+        let result = do_multi_request(&cell, params.clone(), &headers).await;
         if let Ok(res) = result {
             for (key, value) in res.iter() {
                 response.insert(key.clone(), value.clone());
