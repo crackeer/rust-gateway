@@ -42,7 +42,7 @@ pub fn extract_json_value<'a>(
 
 
 
-fn extract_value(src_input: Value, dest_value: Value) -> Option<Value> {
+pub fn extract_value(src_input: Value, dest_value: Value) -> Option<Value> {
     if dest_value.is_string() {
         let data = src_input
             .pointer(dest_value.as_str().unwrap())

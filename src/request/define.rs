@@ -22,6 +22,7 @@ pub struct API {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Response {
+    pub name : String,
     pub data: Option<Value>,
     pub code: u64,
     pub message: String,

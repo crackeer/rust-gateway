@@ -16,7 +16,6 @@ pub struct RequestWrapper {
     pub api_config: APIConfig,
     pub params: Option<Value>,
     pub headers: Option<HashMap<String, String>>,
-    pub name: String,
 }
 
 pub async fn do_simple_request(wrapper: &RequestWrapper) -> Result<Response, Error> {
@@ -46,14 +45,12 @@ pub async fn do_simple_request(wrapper: &RequestWrapper) -> Result<Response, Err
     Ok(response)
 }
 
-
-
-
 pub async fn do_request(
     service: String,
     api: String,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
+    name: String,
 ) -> Result<APIResponse, String> {
     let service_config = get_service(&service);
     if service_config.is_none() {
@@ -78,7 +75,6 @@ pub async fn do_request(
         },
         params: params,
         headers: headers,
-        name: String::from("Simple"),
     };
 
     let response = do_simple_request(wrapper).await;
@@ -98,6 +94,7 @@ pub async fn do_request(
             .to_owned();
         println!("response:{}", message_value);
         return Ok(APIResponse {
+            name : name.clone(),
             data: Some(data_value),
             code: code_value.as_u64().unwrap(),
             cost: 0,

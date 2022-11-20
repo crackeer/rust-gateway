@@ -51,11 +51,12 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    let result = do_request(params.service, params.api, params.params, params.header).await;
+    let result = do_request(params.service, params.api, params.params, params.header, String::from("simple")).await;
     if let Ok(response) = result {
         return axum::Json(response);
     }
     axum::Json(APIResponse {
+        name: String::from("simple"),
         data: None,
         code: 10001,
         cost: 0,
