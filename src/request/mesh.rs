@@ -22,7 +22,7 @@ pub async fn do_multi_request(
         let api = parts[1].to_string();
         let headers = headers.clone();
         let tmp = tx.clone();
-        let mut real_params : Value = json!({});
+        let mut real_params: Value = json!({});
         if let Some(value) = extract_value(&params, &req.params.clone().unwrap()) {
             real_params = value
         }
@@ -51,17 +51,12 @@ pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
     params: &Value,
     headers: &HashMap<String, String>,
-) -> Result<HashMap<String, Option<Value>>, String> {
-    let mut response: HashMap<String, Option<Value>> = HashMap::new();
+) -> Result<Value, String> {
     let mut input: Value = json!({});
-    if params.is_object() {
-        for (key, value) in params.as_object().unwrap().iter() {
-            input
-                .as_object_mut()
-                .unwrap()
-                .insert(key.clone(), value.clone());
-        }
-    }
+    input
+        .as_object_mut()
+        .unwrap()
+        .insert(String::from("input"), params.clone());
 
     for cell in cells {
         let result = do_multi_request(&cell, &input, headers).await;
@@ -73,10 +68,8 @@ pub async fn do_mesh_request(
                         .unwrap()
                         .insert(key.clone(), val.clone());
                 }
-                response.insert(key.clone(), value.clone());
             }
         }
     }
-
-    Ok(response)
+    Ok(input)
 }

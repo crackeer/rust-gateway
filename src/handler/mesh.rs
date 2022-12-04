@@ -10,10 +10,8 @@ use axum::{
     BoxError,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::{
-    collections::{ HashMap},
-};
+use serde_json::{json, Value};
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MeshParams {
@@ -52,5 +50,5 @@ pub async fn mesh(params: MeshParams) -> impl IntoResponse {
             return axum::Json(result);
         }
     }
-    axum::Json(HashMap::new())
+    axum::Json(json!({}))
 }
