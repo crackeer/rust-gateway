@@ -1,4 +1,3 @@
-use super::define::Response;
 use super::request::do_request;
 use crate::request::define::RouterRequestCell;
 use crate::util::json::extract_value;
@@ -12,8 +11,8 @@ pub async fn do_multi_request(
     wrappers: &Vec<RouterRequestCell>,
     params: Option<Value>,
     headers: &Option<HashMap<String, String>>,
-) -> Result<HashMap<String, Response>, Error> {
-    let mut response: HashMap<String, Response> = HashMap::new();
+) -> Result<HashMap<String, Option<Value>>, Error> {
+    let mut response: HashMap<String, Option<Value>> = HashMap::new();
     let mut childs = vec![];
     let (tx, mut rx) = mpsc::channel(32);
     let mut total = wrappers.len();
@@ -27,7 +26,6 @@ pub async fn do_multi_request(
         let name = req.name.clone();
         let c = spawn(async move {
             let result = do_request(service, api, real_params, headers, name).await;
-            println!("Request End{}", result.is_err());
             if let Err(err) = tmp.clone().send(result).await {
                 println!("request error{}", err.to_string())
             }
@@ -39,21 +37,7 @@ pub async fn do_multi_request(
         if let Some(message) = rx.recv().await {
             total = total - 1;
             println!("{}", "recv message");
-            if let Ok(res) = message {
-                response.insert(res.name.clone(), res);
-            } else {
-                response.insert(
-                    String::from("Error"),
-                    Response {
-                        name : String::from("Error"),
-                        message: "error".to_string(),
-                        data: Some(Value::from(String::from("simple error"))),
-                        code: 0,
-                        cost: 0,
-                        business_code:String::from(""),
-                    },
-                );
-            }
+            response.insert(message.name.clone(), message.data);
         }
     }
 
@@ -64,8 +48,8 @@ pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
     params: Option<Value>,
     headers: Option<HashMap<String, String>>,
-) -> Result<HashMap<String, Response>, String> {
-    let mut response: HashMap<String, Response> = HashMap::new();
+) -> Result<HashMap<String, Option<Value>>, String> {
+    let mut response: HashMap<String, Option<Value>> = HashMap::new();
 
     for cell in cells {
         let result = do_multi_request(&cell, params.clone(), &headers).await;

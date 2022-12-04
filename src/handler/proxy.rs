@@ -1,19 +1,16 @@
-use crate::request::define::Response as APIResponse;
 use crate::request::request::do_request;
 use crate::util::request as util_request;
 
 use axum::{
     async_trait,
-    body::{ HttpBody},
+    body::HttpBody,
     extract::{FromRequest, Path, RequestParts},
     response::{IntoResponse, Response},
     BoxError,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{ Value};
-use std::{
-    collections::HashMap,
-};
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Params {
@@ -40,7 +37,7 @@ where
         let data: Value = util_request::extract_parameter_all(req).await;
         let path_params: Path<Params> = result.unwrap();
         let Path(tmp_params) = path_params;
-        
+
         return Ok(Params {
             params: Some(data),
             api: tmp_params.api,
@@ -51,16 +48,13 @@ where
 }
 
 pub async fn relay(params: Params) -> impl IntoResponse {
-    let result = do_request(params.service, params.api, params.params, params.header, String::from("simple")).await;
-    if let Ok(response) = result {
-        return axum::Json(response);
-    }
-    axum::Json(APIResponse {
-        name: String::from("simple"),
-        data: None,
-        code: 1,
-        cost: 0,
-        business_code:String::from(""),
-        message: result.err().unwrap(),
-    })
+    let result = do_request(
+        params.service,
+        params.api,
+        params.params,
+        params.header,
+        String::from("simple"),
+    )
+    .await;
+    return axum::Json(result);
 }

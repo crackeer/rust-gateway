@@ -20,22 +20,6 @@ pub struct API {
     pub content_type: Option<String>,
 }
 
-pub enum ResponseError {
-    SystemError(String),
-    RequestError(String),
-    ServiceError(String),
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct Response {
-    pub name : String,
-    pub data: Option<Value>,
-    pub code: usize,
-    pub business_code: String,
-    pub message: String,
-    pub cost: usize,
-    //pub error: Option<ResponseError>,
-}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Router {
