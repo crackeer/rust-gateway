@@ -24,6 +24,7 @@ pub struct API {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Router {
     pub config: Vec<Vec<RouterRequestCell>>,
+    pub response : Option<Value>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -1,7 +1,7 @@
 use crate::container::api::get_router_config;
 use crate::request::mesh::do_mesh_request;
 use crate::util::request as util_request;
-
+use crate::util::json::extract_value;
 use axum::{
     async_trait,
     body::HttpBody,
@@ -45,10 +45,16 @@ where
 pub async fn mesh(params: MeshParams) -> impl IntoResponse {
     println!("{}", "Simple");
     let router_config = get_router_config(&params.path);
+    let mut response : Value = json!({});
     if let Some(router) = router_config {
         if let Ok(result) = do_mesh_request(router.config, &params.params, &params.header).await {
-            return axum::Json(result);
+            response = result
+        }
+        if let Some(dest_response) = router.response {
+            if let Some(value) = extract_value(&response, &dest_response) {
+                response = value
+            }
         }
     }
-    axum::Json(json!({}))
+    axum::Json(response)
 }
