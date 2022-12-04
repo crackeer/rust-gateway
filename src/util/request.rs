@@ -85,11 +85,8 @@ B::Error: Into<BoxError>,
     return get_data
 }
 
-pub fn build_query(data: &Option<Value>) -> String {
-    if data.is_none() {
-        return String::new();
-    }
-    let data = data.clone().unwrap();
+pub fn build_query(data: &Value) -> String {
+    let data = data.clone();
 
     let mut query = String::new();
     for (key, value) in data.as_object().unwrap().iter() {

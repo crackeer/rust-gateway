@@ -16,8 +16,8 @@ use std::collections::HashMap;
 pub struct Params {
     service: String,
     api: String,
-    params: Option<Value>,
-    header: Option<HashMap<String, String>>,
+    params: Value,
+    header: HashMap<String, String>,
 }
 
 #[async_trait]
@@ -39,10 +39,10 @@ where
         let Path(tmp_params) = path_params;
 
         return Ok(Params {
-            params: Some(data),
+            params: data,
             api: tmp_params.api,
             service: tmp_params.service,
-            header: Some(header),
+            header: header,
         });
     }
 }
@@ -51,8 +51,8 @@ pub async fn relay(params: Params) -> impl IntoResponse {
     let result = do_request(
         params.service,
         params.api,
-        params.params,
-        params.header,
+        &params.params,
+        &params.header,
         String::from("simple"),
     )
     .await;

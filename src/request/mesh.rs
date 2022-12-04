@@ -2,15 +2,15 @@ use super::request::do_request;
 use crate::request::define::RouterRequestCell;
 use crate::util::json::extract_value;
 use reqwest::Error;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use tokio::spawn;
 use tokio::sync::mpsc;
 
 pub async fn do_multi_request(
     wrappers: &Vec<RouterRequestCell>,
-    params: Option<Value>,
-    headers: &Option<HashMap<String, String>>,
+    params: &Value,
+    headers: &HashMap<String, String>,
 ) -> Result<HashMap<String, Option<Value>>, Error> {
     let mut response: HashMap<String, Option<Value>> = HashMap::new();
     let mut childs = vec![];
@@ -22,10 +22,13 @@ pub async fn do_multi_request(
         let api = parts[1].to_string();
         let headers = headers.clone();
         let tmp = tx.clone();
-        let real_params = extract_value(&params.clone().unwrap(), &req.params.clone().unwrap());
+        let mut real_params : Value = json!({});
+        if let Some(value) = extract_value(&params, &req.params.clone().unwrap()) {
+            real_params = value
+        }
         let name = req.name.clone();
         let c = spawn(async move {
-            let result = do_request(service, api, real_params, headers, name).await;
+            let result = do_request(service, api, &real_params, &headers, name).await;
             if let Err(err) = tmp.clone().send(result).await {
                 println!("request error{}", err.to_string())
             }
@@ -46,15 +49,30 @@ pub async fn do_multi_request(
 
 pub async fn do_mesh_request(
     cells: Vec<Vec<RouterRequestCell>>,
-    params: Option<Value>,
-    headers: Option<HashMap<String, String>>,
+    params: &Value,
+    headers: &HashMap<String, String>,
 ) -> Result<HashMap<String, Option<Value>>, String> {
     let mut response: HashMap<String, Option<Value>> = HashMap::new();
+    let mut input: Value = json!({});
+    if params.is_object() {
+        for (key, value) in params.as_object().unwrap().iter() {
+            input
+                .as_object_mut()
+                .unwrap()
+                .insert(key.clone(), value.clone());
+        }
+    }
 
     for cell in cells {
-        let result = do_multi_request(&cell, params.clone(), &headers).await;
+        let result = do_multi_request(&cell, &input, headers).await;
         if let Ok(res) = result {
             for (key, value) in res.iter() {
+                if let Some(val) = value {
+                    input
+                        .as_object_mut()
+                        .unwrap()
+                        .insert(key.clone(), val.clone());
+                }
                 response.insert(key.clone(), value.clone());
             }
         }

@@ -17,8 +17,8 @@ pub struct APIConfig {
 pub struct RequestWrap {
     pub api_config: APIConfig,
     pub name: String,
-    pub params: Option<Value>,
-    pub headers: Option<HashMap<String, String>>,
+    pub params: Value,
+    pub headers: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -63,10 +63,8 @@ pub async fn do_simple_request(wrapper: &RequestWrap) -> ResponseWrap {
         builder = client.get(&full_url);
     } else if wrapper.api_config.method == "POST" {
         builder = client.post(&wrapper.api_config.url);
-        if let Some(params) = &wrapper.params {
-            if content_type == "application/json" {
-                builder = builder.json(&params);
-            }
+        if content_type == "application/json" {
+            builder = builder.json(&wrapper.params);
         }
     }
     let result = builder.send().await;
@@ -104,8 +102,8 @@ pub async fn do_simple_request(wrapper: &RequestWrap) -> ResponseWrap {
 pub async fn do_request(
     service: String,
     api: String,
-    params: Option<Value>,
-    headers: Option<HashMap<String, String>>,
+    params: &Value,
+    headers: &HashMap<String, String>,
     name: String,
 ) -> ResponseWrap {
     let service_config = get_service(&service);
@@ -141,8 +139,8 @@ pub async fn do_request(
             success_code: vec![service_config.success_code.clone()],
         },
         name: name,
-        params: params,
-        headers: headers,
+        params: params.clone(),
+        headers: headers.clone(),
     };
 
     return do_simple_request(wrapper).await;
