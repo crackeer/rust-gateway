@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "rust-gateway"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,7 +12,9 @@ tokio = { version = "1.13.0", features = ["full"] }
 serde = { version = "^1.0", features = ["derive"]}
 tracing-subscriber = "0.3.15"
 tracing = "0.1"
+tracing-error = "0.2.0"
 toml = "0.5.9"
+tracing-appender = "0.2.2"
 rbs = { version = "0.1"}
 rbatis = { version = "4.0"}
 rbdc-mysql={version="0.1"}
