@@ -4,6 +4,8 @@ use crate::request::define::{Router, Service, ServiceAPIFactory, API};
 use sqlx::{MySql, Pool};
 */
 
+use tracing::{info, error};
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::time;
@@ -45,12 +47,12 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env: String)
 
     loop {
         interval.tick().await;
-        //println!("load_service_api coming");
+        info!("load_service_api");
 
         let service_list = factory.get_service_list(env.clone());
         let result = SERVICE_MAP.try_lock();
         if result.is_err() {
-            //println!("load_service_api failed, err = {}", result.err().unwrap());
+            error!("load_service_api failed, err = {}", result.err().unwrap());
             continue;
         }
         let mut service_map = result.unwrap();
@@ -69,9 +71,7 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env: String)
         let router_list = factory.get_router_list();
 
         if let Some(list) = router_list {
-            //println!("{}", list.len());
             for (key, item) in list.iter() {
-                //println!("{}", key);
                 router_map.insert(key.clone(), item.clone());
             }
         }

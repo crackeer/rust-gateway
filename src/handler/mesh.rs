@@ -43,7 +43,6 @@ where
 }
 
 pub async fn mesh(params: MeshParams) -> impl IntoResponse {
-    println!("{}", "Simple");
     let router_config = get_router_config(&params.path);
     let mut response : Value = json!({});
     if let Some(router) = router_config {
