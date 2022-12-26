@@ -1,0 +1,26 @@
+{
+    "config" : [
+        [
+            {
+                "api" : "test/database_tables",
+                "params" : {
+                    "abc" : "simple1"
+                },
+                "name" : "abc1",
+                "recovery" : false
+            },
+            {
+                "api" : "test/database_tables",
+                "params" : {
+                    "abc" : "#/simple2",
+                    "def" : "#/abc/dev"
+                },
+                "name" : "abc2",
+                "recovery" : false
+            }
+        ]
+    ],
+    "resonse" : {
+        "abc" : "#/input/simple"
+    }
+}

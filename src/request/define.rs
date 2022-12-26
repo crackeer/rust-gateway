@@ -1,8 +1,9 @@
 use crate::util::file as util_file;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use serde_json;
 use std::collections::HashMap;
-
+use tracing::error;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Service {
     pub host: String,
@@ -80,16 +81,25 @@ impl ServiceAPIFactory for FileFactory {
     }
     fn get_router_list(&self) -> Option<HashMap<String, Router>> {
         //println!("{}", self.router_path);
-        let file_list = util_file::get_file_list(self.router_path.clone(), String::from(".toml"));
+        let file_list = util_file::get_file_list(self.router_path.clone(), String::from(".json"));
         //println!("{}", file_list.join(","));
         let mut response: HashMap<String, Router> = HashMap::new();
 
         for file in file_list {
-            if let Ok(content) = util_file::read_file(file.as_str()) {
-                let decoded: Router = toml::from_str(&content).unwrap();
-                response.insert(trim_router_path(&file, &self.router_path, ".toml"), decoded);
-                
+            match util_file::read_file(file.as_str()) {
+                Err(err) => {
+                    error!("{}", err);
+                },
+                Ok(content) => {
+                    match serde_json::from_str(&content) {
+                        Ok(decoded) => {
+                            response.insert(trim_router_path(&file, &self.router_path, ".json"), decoded);
+                        },
+                        Err(err) => error!("json decode {} error {}", &self.router_path, err)
+                    }
+                }
             }
+            
         }
         Some(response)
     }
