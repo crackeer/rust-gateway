@@ -1,0 +1,17 @@
+port = 8080
+driver = "file"
+file = {
+    dir = "./etc/file"
+}
+mysql = {
+    host = "m10565.hsahs.com:103283",
+    user = "root",
+    password = "secret",
+    database = "default"
+    env = "default"
+}
+
+log = {
+    level = "info",
+    dir = "./log"
+}

@@ -14,12 +14,14 @@ use axum::{
 };
 //use container::pool::establish_mysql_connection;
 use container::api::load_service_api;
+use rbs::Value;
 use request::define::FileFactory;
 use std::{net::SocketAddr, sync::Arc};
 use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry};
+
 
 fn init_tracing_log() {
     // 输出到控制台中
@@ -36,6 +38,10 @@ fn init_tracing_log() {
         .with(formatting_layer)
         .with(file_layer)
         .init();
+}
+
+fn init_config() {
+//let args: Vec<String> = env::args().collect();
 }
 
 #[tokio::main]
