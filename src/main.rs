@@ -14,22 +14,22 @@ use axum::{
 };
 //use container::pool::establish_mysql_connection;
 use container::api::load_service_api;
-use container::config::{Config};
-use rbs::Value;
+use container::config::{Config, DRIVER_FILE, DRIVER_MYSQL, LogPart};
+use toml;
 use request::define::FileFactory;
 use std::{net::SocketAddr, sync::Arc};
 use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry};
+use util::file as util_file;
 
-
-fn init_tracing_log() {
+fn init_tracing_log(log_part: LogPart){
     // 输出到控制台中
     let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
 
     // 输出到文件中
-    let file_appender = rolling::never("logs", "app.log");
+    let file_appender = rolling::never(log_part.dir.as_str(), log_part.filename.as_str());
     let (non_blocking_appender, _guard) = non_blocking(file_appender);
     let file_layer = fmt::layer()
         .with_ansi(false)
@@ -41,20 +41,37 @@ fn init_tracing_log() {
         .init();
 }
 
-fn init_config() {
+fn init_config() -> Config {
+    let data = match util_file::read_file("./etc/entry.toml") {
+        Ok(data) => data,
+        Err(err) => panic!("read entry.toml error:{}", err),
+    };
+    let decoded : Config = match toml::from_str(&data) {
+        Ok(config) => config,
+        Err(err) => panic!("decode error:{}", err),
+    };
+    decoded
+}
 
+fn init_api_factory(config : &Config){
+    if config.driver == DRIVER_FILE {
+        let factory = FileFactory::new(
+            config.file.service_dir.clone(),
+            config.file.api_dir.clone(),
+            config.file.router_dir.clone()
+        );
+        tokio::spawn(load_service_api(Arc::new(factory), config.file.router_dir.clone()));
+    } else if config.driver == DRIVER_MYSQL {
+        todo!();
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    init_tracing_log();
-    //let pool = establish_mysql_connection().await;
-    let factory = FileFactory::new(
-        String::from("./config/service"),
-        String::from("./config/api"),
-        String::from("./config/router"),
-    );
-    tokio::spawn(load_service_api(Arc::new(factory), String::from("default")));
+    let config = init_config();
+    init_tracing_log(config.log.clone());
+    init_api_factory(&config);
+    
 
     //tokio::spawn(load_api(Arc::new(pool.to_owned())));
     // build our application with a route
