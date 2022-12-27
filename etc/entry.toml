@@ -1,17 +1,5 @@
 port = 8080
 driver = "file"
-file = {
-    dir = "./etc/file"
-}
-mysql = {
-    host = "m10565.hsahs.com:103283",
-    user = "root",
-    password = "secret",
-    database = "default"
-    env = "default"
-}
-
-log = {
-    level = "info",
-    dir = "./log"
-}
+file = {dir = "./etc/file", env = "default"}
+mysql = {host = "127.0.0.1",user = "root",password = "12345678",database = "default",env = "default"}
+log = {level = "info",dir = "./log"}

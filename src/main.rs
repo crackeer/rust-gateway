@@ -14,6 +14,7 @@ use axum::{
 };
 //use container::pool::establish_mysql_connection;
 use container::api::load_service_api;
+use container::config::{Config};
 use rbs::Value;
 use request::define::FileFactory;
 use std::{net::SocketAddr, sync::Arc};
@@ -41,7 +42,7 @@ fn init_tracing_log() {
 }
 
 fn init_config() {
-//let args: Vec<String> = env::args().collect();
+
 }
 
 #[tokio::main]

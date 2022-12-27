@@ -1,18 +1,18 @@
 
-
-struct config {
+#[allow(dead_code)]
+pub struct Config {
     pub port : usize,
     pub driver : String,
-    pub file : file_part,
-    pub mysql : mysql_part,
-    pub log: log_part,
+    pub file : FilePart,
+    pub mysql : MysqlPart,
+    pub log: LogPart,
 }
 
-pub struct file_part {
+pub struct FilePart {
    pub  dir : String,
 }
 
-pub struct  mysql_part {
+pub struct  MysqlPart {
     pub host : String,
     pub user : String,
     pub password : String,
@@ -20,7 +20,7 @@ pub struct  mysql_part {
     pub env : String,
 }
 
-pub struct log_part {
+pub struct LogPart {
     pub dir : String,
     pub level : String,
 }
