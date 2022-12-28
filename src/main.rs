@@ -46,11 +46,10 @@ fn init_config() -> Config {
         Ok(data) => data,
         Err(err) => panic!("read entry.toml error:{}", err),
     };
-    let decoded : Config = match toml::from_str(&data) {
+    match toml::from_str(&data) {
         Ok(config) => config,
         Err(err) => panic!("decode error:{}", err),
-    };
-    decoded
+    }
 }
 
 fn init_api_factory(config : &Config){
