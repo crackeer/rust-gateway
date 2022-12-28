@@ -1,13 +1,13 @@
 use crate::util::file as util_file;
+use axum::async_trait;
 use core::panic;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::Value;
 use sqlx::mysql::MySqlPoolOptions;
-use sqlx::{Error, MySql, Pool, FromRow};
+use sqlx::{FromRow, MySql, Pool};
 use std::collections::HashMap;
 use tracing::error;
-use axum::async_trait;
 
 #[derive(Serialize, Deserialize, Clone, Debug, FromRow)]
 pub struct Service {
@@ -19,20 +19,28 @@ pub struct Service {
     pub message_key: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
 pub struct API {
     pub path: String,
     pub method: String,
     pub content_type: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
 pub struct Router {
     pub config: Vec<Vec<RouterRequestCell>>,
     pub response: Option<Value>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
+pub struct DBRouter {
+    pub config: String,
+    pub response: String,
+}
+
+
+
+#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
 pub struct RouterRequestCell {
     pub name: String,
     pub api: String,
@@ -42,9 +50,9 @@ pub struct RouterRequestCell {
 
 #[async_trait]
 pub trait ServiceAPIFactory {
-    fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>>;
-    fn get_api_list(&self, service: String) -> Option<HashMap<String, API>>;
-    fn get_router_list(&self) -> Option<HashMap<String, Router>>;
+    async fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>>;
+    async fn get_api_list(&self, service: String) -> Option<HashMap<String, API>>;
+    async fn get_router_list(&self) -> Option<HashMap<String, Router>>;
 }
 
 pub struct FileFactory {
@@ -63,8 +71,9 @@ impl FileFactory {
     }
 }
 
+#[async_trait]
 impl ServiceAPIFactory for FileFactory {
-    fn get_api_list(&self, service: String) -> Option<HashMap<String, API>> {
+    async fn get_api_list(&self, service: String) -> Option<HashMap<String, API>> {
         let full_path = format!("{}/{}.toml", self.api_path, service);
         let content = util_file::read_file(full_path.as_str());
         if content.is_ok() {
@@ -74,7 +83,7 @@ impl ServiceAPIFactory for FileFactory {
             None
         }
     }
-    fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>> {
+    async fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>> {
         let full_path = format!("{}/{}.toml", self.service_path, env);
         let content = util_file::read_file(full_path.as_str());
         if content.is_ok() {
@@ -84,7 +93,7 @@ impl ServiceAPIFactory for FileFactory {
             None
         }
     }
-    fn get_router_list(&self) -> Option<HashMap<String, Router>> {
+    async fn get_router_list(&self) -> Option<HashMap<String, Router>> {
         //println!("{}", self.router_path);
         let file_list = util_file::get_file_list(self.router_path.clone(), String::from(".json"));
         //println!("{}", file_list.join(","));
@@ -149,16 +158,45 @@ impl MySqlFactory {
     }
 }
 
+#[async_trait]
 impl ServiceAPIFactory for MySqlFactory {
-    fn get_api_list(&self, _service: String) -> Option<HashMap<String, API>> {
-        //let list = sqlx::query_as::<_, Service>(r#"select * from actor"#).fetch_all(&self.pool).await;
-        //let data = list.await
+    async fn get_api_list(&self, _service: String) -> Option<HashMap<String, API>> {
+        let list = sqlx::query_as::<_, API>(r#"select * from service_api"#)
+            .fetch_all(&self.pool)
+            .await;
+        let data: HashMap<String, API> = HashMap::new();
+        if let Ok(list) = list {
+            for api in list.into_iter() {
+                data.insert(api.path, api.clone());
+            }
+            return Some(data);
+        }
         None
     }
-    fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>> {
+    async fn get_service_list(&self, env: String) -> Option<HashMap<String, Service>> {
+        let list = sqlx::query_as::<_, Service>(r#"select * from service_api"#)
+            .fetch_all(&self.pool)
+            .await;
+        let data: HashMap<String, Service> = HashMap::new();
+        if let Ok(list) = list {
+            for api in list.into_iter() {
+                data.insert(api.host, api.clone());
+            }
+            return Some(data);
+        }
         None
     }
-    fn get_router_list(&self) -> Option<HashMap<String, Router>> {
+    async fn get_router_list(&self) -> Option<HashMap<String, Router>> {
+        let list = sqlx::query_as::<_, DBRouter>(r#"select * from router"#)
+            .fetch_all(&self.pool)
+            .await;
+        let data: HashMap<String, Router> = HashMap::new();
+        if let Ok(list) = list {
+            for api in list.into_iter() {
+                //data.insert(String::from("simple"), api.clone());
+            }
+            return Some(data);
+        }
         None
     }
 }
