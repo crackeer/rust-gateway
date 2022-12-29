@@ -4,6 +4,7 @@ mod model;
 mod request;
 mod service_api;
 mod util;
+mod data_factory;
 
 #[macro_use]
 extern crate lazy_static;
@@ -16,13 +17,13 @@ use axum::{
 use container::api::load_service_api;
 use container::config::{Config, DRIVER_FILE, DRIVER_MYSQL, LogPart};
 use toml;
-use request::define::FileFactory;
 use std::{net::SocketAddr, sync::Arc};
 use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry};
 use util::file as util_file;
+use data_factory::service::file::FileFactory;
 
 fn init_tracing_log(log_part: LogPart){
     // 输出到控制台中
