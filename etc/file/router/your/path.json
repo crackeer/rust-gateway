@@ -20,7 +20,7 @@
             }
         ]
     ],
-    "resonse" : {
+    "response" : {
         "abc" : "#/input/simple"
     }
 }

@@ -48,27 +48,25 @@ pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env: String)
     loop {
         interval.tick().await;
         info!("load_service_api");
-
         let service_list = factory.get_service_list(env.clone()).await;
-        let mut service_map = SERVICE_MAP.try_lock().unwrap().clone();
-        let mut api_map = API_MAP.try_lock().unwrap().clone();
+        
         if let Some(service_list) = service_list {
             for (key, item) in service_list.iter() {
-                service_map.insert(key.clone(), item.clone());
+                SERVICE_MAP.lock().unwrap().insert(key.clone(), item.clone());
                 let tmp =  factory.get_api_list(key.clone()).await.clone();
                 if let Some(tmp_api_map) = tmp {
                     for (key1, item1) in tmp_api_map.iter() {
-                        api_map.insert(format!("{}-{}", key, key1), item1.clone());
+                        API_MAP.lock().unwrap().insert(format!("{}-{}", key, key1), item1.clone());
                     }
                 }
             }
         }
-        let mut router_map = ROUTER_MAP.try_lock().unwrap().clone();
         let router_list = factory.get_router_list().await;
-
+       
         if let Some(list) = router_list {
             for (key, item) in list.iter() {
-                router_map.insert(key.clone(), item.clone());
+                println!("{}", key.clone());
+                ROUTER_MAP.lock().unwrap().insert(key.clone(), item.clone());
             }
         }
     }
