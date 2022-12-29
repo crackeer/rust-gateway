@@ -164,10 +164,10 @@ impl ServiceAPIFactory for MySqlFactory {
         let list = sqlx::query_as::<_, API>(r#"select * from service_api"#)
             .fetch_all(&self.pool)
             .await;
-        let data: HashMap<String, API> = HashMap::new();
+        let mut data: HashMap<String, API> = HashMap::new();
         if let Ok(list) = list {
             for api in list.into_iter() {
-                data.insert(api.path, api.clone());
+                data.insert(api.path.clone(), api.clone());
             }
             return Some(data);
         }
@@ -177,10 +177,10 @@ impl ServiceAPIFactory for MySqlFactory {
         let list = sqlx::query_as::<_, Service>(r#"select * from service_api"#)
             .fetch_all(&self.pool)
             .await;
-        let data: HashMap<String, Service> = HashMap::new();
+        let mut data: HashMap<String, Service> = HashMap::new();
         if let Ok(list) = list {
             for api in list.into_iter() {
-                data.insert(api.host, api.clone());
+                data.insert(api.host.clone(), api.clone());
             }
             return Some(data);
         }
@@ -190,7 +190,7 @@ impl ServiceAPIFactory for MySqlFactory {
         let list = sqlx::query_as::<_, DBRouter>(r#"select * from router"#)
             .fetch_all(&self.pool)
             .await;
-        let data: HashMap<String, Router> = HashMap::new();
+        let mut data: HashMap<String, Router> = HashMap::new();
         if let Ok(list) = list {
             for api in list.into_iter() {
                 //data.insert(String::from("simple"), api.clone());
