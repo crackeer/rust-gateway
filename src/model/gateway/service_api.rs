@@ -11,7 +11,7 @@ pub struct Model {
     pub service: String,
     pub content_type: Option<String>,
     pub path: String,
-    pub method: Option<String>,
+    pub method: String,
     pub description: String,
     pub creator: String,
     pub extension: Option<String>,

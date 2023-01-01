@@ -1,15 +1,10 @@
-use crate::util::file as util_file;
 use axum::async_trait;
-use core::panic;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::Value;
-use sqlx::mysql::MySqlPoolOptions;
-use sqlx::{FromRow, MySql, Pool};
 use std::collections::HashMap;
-use tracing::error;
 
-#[derive(Serialize, Deserialize, Clone, Debug, FromRow)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Service {
     pub host: String,
     pub timeout: u32,
@@ -19,26 +14,26 @@ pub struct Service {
     pub message_key: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct API {
     pub path: String,
     pub method: String,
     pub content_type: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Router {
     pub config: Vec<Vec<RouterRequestCell>>,
     pub response: Option<Value>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DBRouter {
     pub config: String,
     pub response: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RouterRequestCell {
     pub name: String,
     pub api: String,

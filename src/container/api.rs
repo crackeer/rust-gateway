@@ -1,9 +1,4 @@
 use crate::data_factory::service::define::{Router, Service, ServiceAPIFactory, API};
-
-/*
-use sqlx::{MySql, Pool};
-*/
-
 use tracing::{info, error};
 
 use std::collections::HashMap;
@@ -43,7 +38,7 @@ pub async fn load_api_by_mysql(arc_pool: Arc<Pool<MySql>>) {
 */
 
 pub async fn load_service_api(factory: Arc<impl ServiceAPIFactory>, env: String) {
-    let mut interval = time::interval(time::Duration::from_secs(1));
+    let mut interval = time::interval(time::Duration::from_secs(5));
 
     loop {
         interval.tick().await;
