@@ -1,9 +1,9 @@
+use super::define::{Router, Service, ServiceAPIFactory, API};
 use crate::util::file as util_file;
 use axum::async_trait;
 use serde_json;
 use std::collections::HashMap;
 use tracing::error;
-use super::define::{ServiceAPIFactory, Service, API, Router};
 
 pub struct FileFactory {
     pub service_path: String,
@@ -12,7 +12,7 @@ pub struct FileFactory {
 }
 
 impl FileFactory {
-    pub fn new(service_path: String, api_path: String, router_path: String) -> FileFactory {
+    pub async fn new(service_path: String, api_path: String, router_path: String) -> FileFactory {
         return FileFactory {
             service_path: service_path,
             api_path: api_path,
@@ -80,4 +80,3 @@ fn trim_router_path(path: &String, prefix: &str, suffix: &str) -> String {
         .to_string()
         .replace("\\", "/")
 }
-

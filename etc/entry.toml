@@ -1,5 +1,5 @@
 port = 8080
-driver = "file"
+driver = "mysql"
 file = {api_dir = "./etc/file/api", service_dir = "./etc/file/service", router_dir = "./etc/file/router", env = "default"}
-mysql = {host = "127.0.0.1",user = "root",password = "12345678",database = "default",env = "default"}
+mysql = {host = "127.0.0.1",user = "root",password = "12345678",database = "gateway",env = "default"}
 log = {level = "info",dir = "./log", filename = "app.log"}

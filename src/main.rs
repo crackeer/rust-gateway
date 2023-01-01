@@ -1,31 +1,29 @@
 mod container;
+mod data_factory;
 mod handler;
 mod model;
 mod request;
 mod service_api;
 mod util;
-mod data_factory;
 
 #[macro_use]
 extern crate lazy_static;
 use axum::{
-    //extract::Extension,
     routing::{any, get, post},
     Router,
 };
-//use container::pool::establish_mysql_connection;
 use container::api::load_service_api;
-use container::config::{Config, DRIVER_FILE, DRIVER_MYSQL, LogPart};
-use toml;
+use container::config::{Config, LogPart, DRIVER_FILE, DRIVER_MYSQL};
+use data_factory::service::{file::FileFactory, mysql::MySqlFactory};
 use std::{net::SocketAddr, sync::Arc};
+use toml;
 use tracing::info;
 use tracing_appender::{non_blocking, rolling};
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Registry};
 use util::file as util_file;
-use data_factory::service::file::FileFactory;
 
-fn init_tracing_log(log_part: LogPart){
+fn init_tracing_log(log_part: LogPart) {
     // 输出到控制台中
     let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
 
@@ -53,16 +51,22 @@ fn init_config() -> Config {
     }
 }
 
-fn init_api_factory(config : &Config){
+async fn init_api_factory(config: &Config) {
     if config.driver == DRIVER_FILE {
         let factory = FileFactory::new(
             config.file.service_dir.clone(),
             config.file.api_dir.clone(),
-            config.file.router_dir.clone()
-        );
-        tokio::spawn(load_service_api(Arc::new(factory), config.file.router_dir.clone()));
+            config.file.router_dir.clone(),
+        ).await;
+        tokio::spawn(load_service_api(Arc::new(factory), config.file.env.clone()));
     } else if config.driver == DRIVER_MYSQL {
-        todo!();
+        let factory = MySqlFactory::new(
+            config.mysql.user.clone(),
+            config.mysql.password.clone(),
+            config.mysql.host.clone(),
+            config.mysql.database.clone(),
+        ).await;
+        tokio::spawn(load_service_api(Arc::new(factory), config.mysql.env.clone()));
     }
 }
 
@@ -70,8 +74,7 @@ fn init_api_factory(config : &Config){
 async fn main() {
     let config = init_config();
     init_tracing_log(config.log.clone());
-    init_api_factory(&config);
-    
+    init_api_factory(&config).await;
 
     //tokio::spawn(load_api(Arc::new(pool.to_owned())));
     // build our application with a route
