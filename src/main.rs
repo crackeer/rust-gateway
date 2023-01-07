@@ -11,6 +11,10 @@ extern crate lazy_static;
 use axum::{
     routing::{any, get, post},
     Router,
+    body::{Body, HttpBody},
+    response::{IntoResponse, Response},
+    http::{Request, StatusCode},
+    middleware::{self, Next},
 };
 use container::api::load_service_api;
 use container::config::{Config, LogPart, DRIVER_FILE, DRIVER_MYSQL};
@@ -76,11 +80,8 @@ async fn main() {
     init_tracing_log(config.log.clone());
     init_api_factory(&config).await;
 
-    //tokio::spawn(load_api(Arc::new(pool.to_owned())));
-    // build our application with a route
     let app = Router::new()
         .route("/", get(handler::test::root))
-        // `POST /users` goes to `create_user`
         .route("/users", post(handler::test::create_user))
         .route("/service/:env", any(handler::service::get_service_list))
         .route("/routers", any(handler::service::get_router_list))
@@ -88,15 +89,28 @@ async fn main() {
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_mysql_data))
         .route("/http", any(handler::test::http_request))
-        .fallback(any(handler::mesh::mesh));
+        .fallback(any(handler::mesh::mesh)).layer(middleware::from_fn(print_request_response));
     //.layer(Extension(pool));
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], config.port as u16));
     info!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+
+async fn print_request_response(
+    req: Request<Body>,
+    next: Next<Body>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let res = next.run(req).await;
+    let (parts, mut body) = res.into_parts();
+    let bytes = body.data().await.unwrap().unwrap();
+    println!("{:?}", bytes.clone());
+    let res = Response::from_parts(parts, Body::from(bytes));
+    Ok(res)
 }

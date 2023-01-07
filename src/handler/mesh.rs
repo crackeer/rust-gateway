@@ -2,6 +2,7 @@ use crate::container::api::get_router_config;
 use crate::request::mesh::do_mesh_request;
 use crate::util::request as util_request;
 use crate::util::json::extract_value;
+use crate::util::response::{StandardResponse};
 use axum::{
     async_trait,
     body::HttpBody,
@@ -55,5 +56,6 @@ pub async fn mesh(params: MeshParams) -> impl IntoResponse {
             }
         }
     }
-    axum::Json(response)
+    StandardResponse::success(response)
+    //axum::Json(response)
 }
