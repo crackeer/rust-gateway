@@ -2077,11 +2077,8 @@ name = "rust-gateway"
 version = "0.1.0"
 dependencies = [
  "axum",
- "bytes 1.2.1",
- "http",
  "hyper 0.13.10",
  "lazy_static",
- "mime",
  "rbatis",
  "rbdc-mysql",
  "rbs",

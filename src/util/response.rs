@@ -1,10 +1,4 @@
 use axum::response::{IntoResponse, Response};
-use bytes::{BufMut, BytesMut};
-use http::{
-    header::{self, HeaderValue},
-    StatusCode,
-};
-use mime;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -21,26 +15,7 @@ pub struct StandardResponse {
 
 impl IntoResponse for StandardResponse {
     fn into_response(self) -> Response {
-        let mut buf = BytesMut::new().writer();
-        match serde_json::to_writer(&mut buf, &self) {
-            Ok(()) => (
-                [(
-                    header::CONTENT_TYPE,
-                    HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-                )],
-                buf.into_inner().freeze(),
-            )
-                .into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                [(
-                    header::CONTENT_TYPE,
-                    HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
-                )],
-                err.to_string(),
-            )
-                .into_response(),
-        }
+        return axum::Json::from(self).into_response();
     }
 }
 
