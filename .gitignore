@@ -6,3 +6,4 @@ Cargo.lock
 .cargo/
 dist/
 logs/
+log/

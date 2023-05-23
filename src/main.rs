@@ -32,7 +32,7 @@ fn init_tracing_log(log_part: LogPart) {
     let formatting_layer = fmt::layer().pretty().with_writer(std::io::stderr);
 
     // 输出到文件中
-    let file_appender = rolling::never(log_part.dir.as_str(), log_part.filename.as_str());
+    let file_appender = rolling::daily(log_part.dir.as_str(), log_part.filename.as_str());
     let (non_blocking_appender, _guard) = non_blocking(file_appender);
     let file_layer = fmt::layer()
         .with_ansi(false)
