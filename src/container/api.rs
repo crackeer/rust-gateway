@@ -1,5 +1,5 @@
 use crate::data_factory::service::define::{Router, Service, ServiceAPIFactory, API};
-use tracing::{info, error};
+use tracing::{info};
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

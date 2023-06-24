@@ -5,6 +5,7 @@ mod model;
 mod request;
 mod service_api;
 mod util;
+mod service;
 
 #[macro_use]
 extern crate lazy_static;
@@ -89,6 +90,7 @@ async fn main() {
         .route("/files", get(handler::test::md_list))
         .route("/mysql", get(handler::test::fetch_mysql_data))
         .route("/http", any(handler::test::http_request))
+        .route("/download_work", post(handler::work::download_work))
         .fallback(any(handler::mesh::mesh)).layer(middleware::from_fn(print_request_response));
     //.layer(Extension(pool));
 
