@@ -106,14 +106,20 @@ pub fn download_work_to(work : &Work, path : &Path)  {
 
     for item in download.iter() {
         println!("{:?}", item);
+        _ = do_download(item.0.clone(), item.1.clone());
     }
 }
 
-fn download(url : String, dest : String) -> Result<(), reqwest::Error> {
-    let resp : Response = reqwest::blocking::get(url)?;
+fn do_download(url : String, dest : String) -> Result<(), String> {
+    let resp = reqwest::blocking::get(url);
+
+    if let Err(err) = resp {
+        return Err(err.to_string());
+    }
+    let response = resp.unwrap();
     let path : &Path = Path::new(&dest);
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
-        return Ok(());
+        return Err(err.to_string())
     }
 
     let res = File::create(dest);
@@ -122,7 +128,10 @@ fn download(url : String, dest : String) -> Result<(), reqwest::Error> {
     }
     let mut buffer = res.unwrap();
     //buffer.a
-    resp.copy_to(&buffer);
+    let vec = response.bytes().unwrap().to_vec();
+    if let Err(err) = buffer.write_all(&vec) {
+        return Err(err.to_string());
+    }
     //resp.bytes()
     Ok(())
 }
