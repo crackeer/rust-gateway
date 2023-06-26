@@ -6,7 +6,7 @@ use std::{
     fs::{self, File},
 };
 use std::io::Write;
-use reqwest::{self, blocking::Response};
+use reqwest::{self};
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -95,10 +95,10 @@ pub struct PanoramaItem {
     up: String,
 }
 
-pub fn download_work_to(work : &Work, path : &Path)  {
+pub async fn download_work_to(work : &Work, path : &Path)  {
     let mut download : Vec<(String, String)>= Vec::new();
     for item in work.panorama.list.iter() {
-        print!("{:?}", item);
+        println!("{:?}", item);
         let mut full_url = String::from(&work.base_url);
         full_url.push_str(&item.right.as_str());
         download.push((full_url, path.join(&item.right).to_str().unwrap().to_string()));
@@ -106,17 +106,20 @@ pub fn download_work_to(work : &Work, path : &Path)  {
 
     for item in download.iter() {
         println!("{:?}", item);
-        _ = do_download(item.0.clone(), item.1.clone());
+        _ = do_download(item.0.clone(), item.1.clone()).await;
     }
 }
 
-fn do_download(url : String, dest : String) -> Result<(), String> {
-    let resp = reqwest::blocking::get(url);
+async fn  do_download(url : String, dest : String) -> Result<(), String> {
+    //let resp = reqwest::blocking::get(url);
+    let client = reqwest::Client::new();
+    let builder = client.get(url);
+    let result = builder.send().await;
 
-    if let Err(err) = resp {
+    if let Err(err) = result {
         return Err(err.to_string());
     }
-    let response = resp.unwrap();
+    let response = result.unwrap();
     let path : &Path = Path::new(&dest);
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
         return Err(err.to_string())
@@ -128,8 +131,8 @@ fn do_download(url : String, dest : String) -> Result<(), String> {
     }
     let mut buffer = res.unwrap();
     //buffer.a
-    let vec = response.bytes().unwrap().to_vec();
-    if let Err(err) = buffer.write_all(&vec) {
+    let bytes  = response.bytes().await;
+    if let Err(err) = buffer.write_all(&bytes.unwrap().to_vec()) {
         return Err(err.to_string());
     }
     //resp.bytes()
