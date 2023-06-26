@@ -5,6 +5,7 @@ use std::fmt::Display;
 use std::{
     fs::{self, File},
 };
+use std::io::Write;
 use reqwest::{self, blocking::Response};
 
 // Example code that deserializes and serializes the model.
@@ -115,12 +116,13 @@ fn download(url : String, dest : String) -> Result<(), reqwest::Error> {
         return Ok(());
     }
 
-    let res = File::create(url);
+    let res = File::create(dest);
     if res.is_err() {
         return Ok(());
     }
     let mut buffer = res.unwrap();
-    _ = buffer.write(resp.bytes());
+    //buffer.a
+    resp.copy_to(&buffer);
     //resp.bytes()
     Ok(())
 }
