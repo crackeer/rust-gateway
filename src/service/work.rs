@@ -2,6 +2,7 @@
 
 use std::path::{Path};
 use std::fmt::Display;
+use reqwest;
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -35,8 +36,8 @@ pub struct Initial {
     flag_position: Vec<Option<serde_json::Value>>,
     fov: i64,
     heading: i64,
-    latitude: i64,
-    longitude: i64,
+    latitude: f64,
+    longitude: f64,
     pano: i64,
     pano_index: i64,
 }
@@ -94,10 +95,17 @@ pub fn download_work_to(work : &Work, path : &Path)  {
     let mut download : Vec<(String, String)>= Vec::new();
     for item in work.panorama.list.iter() {
         print!("{:?}", item);
-        download.push((item.right.clone(), path.join(&item.right).to_str().unwrap().to_string()));
+        let mut full_url = String::from(&work.base_url);
+        full_url.push_str(&item.right.as_str());
+        download.push((full_url, path.join(&item.right).to_str().unwrap().to_string()));
     }
 
     for item in download.iter() {
         println!("{:?}", item);
     }
+}
+
+fn download(url : String, dest : String) -> Result<_, std::io::Error> {
+    let resp = reqwest::blocking::get(url);
+    Ok(())
 }
