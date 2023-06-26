@@ -2,7 +2,10 @@
 
 use std::path::{Path};
 use std::fmt::Display;
-use reqwest;
+use std::{
+    fs::{self, File},
+};
+use reqwest::{self, blocking::Response};
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -105,7 +108,19 @@ pub fn download_work_to(work : &Work, path : &Path)  {
     }
 }
 
-fn download(url : String, dest : String) -> Result<_, std::io::Error> {
-    let resp = reqwest::blocking::get(url);
+fn download(url : String, dest : String) -> Result<(), reqwest::Error> {
+    let resp : Response = reqwest::blocking::get(url)?;
+    let path : &Path = Path::new(&dest);
+    if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
+        return Ok(());
+    }
+
+    let res = File::create(url);
+    if res.is_err() {
+        return Ok(());
+    }
+    let mut buffer = res.unwrap();
+    _ = buffer.write(resp.bytes());
+    //resp.bytes()
     Ok(())
 }
