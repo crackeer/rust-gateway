@@ -1,12 +1,7 @@
-
-
-use std::path::{Path};
-use std::fmt::Display;
-use std::{
-    fs::{self, File},
-};
-use std::io::Write;
 use reqwest::{self};
+use std::fs::{File};
+use std::io::Write;
+use std::path::Path;
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -21,7 +16,7 @@ use reqwest::{self};
 //     let model: Welcome = serde_json::from_str(&json).unwrap();
 // }
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Work {
     base_url: String,
@@ -56,7 +51,7 @@ pub struct Model {
     model_type: i64,
 }
 
-#[derive(Serialize, Deserialize,Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Observer {
     accessible_nodes: Vec<i64>,
     floor_index: i64,
@@ -95,33 +90,48 @@ pub struct PanoramaItem {
     up: String,
 }
 
-pub async fn download_work_to(work : &Work, path : &Path)  {
-    let mut download : Vec<(String, String)>= Vec::new();
-    for item in work.panorama.list.iter() {
-        let mut full_url = String::from(&work.base_url);
-        full_url.push_str(&item.right);
-        download.push((full_url, path.join(&item.right).to_str().unwrap().to_string()));
+impl Work {
+    fn with_base_url(&self, suffix: &str) -> String {
+        let mut full_url = String::from(&self.base_url);
+        full_url.push_str(suffix);
+        return full_url;
     }
-    download.push((work.picture_url.clone(), path.join("picture.jpg").to_str().unwrap().to_string()));
-    download.push((work.title_picture_url.clone(), path.join("title_picture.jpg").to_str().unwrap().to_string()));
-
-    let mut full_url = String::from(&work.base_url);
-    full_url.push_str(&work.model.file_url);
-    download.push((full_url, path.join(&work.model.file_url).to_str().unwrap().to_string()));
-    for item in work.model.material_textures.iter() {
-        let mut full_url = String::from(&work.base_url);
-        full_url.push_str(&work.model.material_base_url);
-        full_url.push_str(&item);
-        download.push((full_url, path.join(&work.model.material_base_url).join(&item).to_str().unwrap().to_string()));
+    fn with_model_base_url(&self, suffix: &str) -> String {
+        let mut full_url = String::from(&self.model.material_base_url);
+        full_url.push_str(suffix);
+        return full_url;
     }
+    fn get_download_list(&self) -> Vec<(String, String)> {
+        let mut download: Vec<(String, String)> = Vec::new();
+        for item in self.panorama.list.iter() {
+            download.push((self.with_base_url(&item.right), item.right.clone()));
+            download.push((self.with_base_url(&item.left), item.left.clone()));
+            download.push((self.with_base_url(&item.front), item.front.clone()));
+            download.push((self.with_base_url(&item.back), item.back.clone()));
+            download.push((self.with_base_url(&item.up), item.up.clone()));
+            download.push((self.with_base_url(&item.down), item.down.clone()));
+        }
+        download.push((self.picture_url.clone(), String::from("picture.jpg")));
+        download.push((self.title_picture_url.clone(), String::from("title_picture.jpg")));
+        download.push((self.with_base_url(&self.model.file_url), self.model.file_url.clone()));
 
-    for item in download.iter() {
-        println!("{:?}", item);
-        _ = do_download(item.0.clone(), item.1.clone()).await;
+        for item in self.model.material_textures.iter() {
+            download.push((self.with_base_url(&self.with_model_base_url(&item)), self.with_model_base_url(&item)))
+        }
+        return download;
     }
 }
 
-async fn  do_download(url : String, dest : String) -> Result<(), String> {
+
+pub async fn download_work_to(work: &Work, path: &Path) {
+    let download: Vec<(String, String)> = work.get_download_list();
+
+    for item in download.iter() {
+        _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap()).await;
+    }
+}
+
+async fn do_download(url: String, dest: &str) -> Result<(), String> {
     //let resp = reqwest::blocking::get(url);
     let client = reqwest::Client::new();
     let builder = client.get(url);
@@ -131,18 +141,16 @@ async fn  do_download(url : String, dest : String) -> Result<(), String> {
         return Err(err.to_string());
     }
     let response = result.unwrap();
-    let path : &Path = Path::new(&dest);
+    let path: &Path = Path::new(dest);
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
-        return Err(err.to_string())
+        return Err(err.to_string());
     }
-    println!("{}", dest);
     let res = File::create(dest);
     if res.is_err() {
         return Ok(());
     }
     let mut buffer = res.unwrap();
-    //buffer.a
-    let bytes  = response.bytes().await;
+    let bytes = response.bytes().await;
     if let Err(err) = buffer.write_all(&bytes.unwrap().to_vec()) {
         return Err(err.to_string());
     }
