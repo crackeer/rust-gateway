@@ -98,10 +98,21 @@ pub struct PanoramaItem {
 pub async fn download_work_to(work : &Work, path : &Path)  {
     let mut download : Vec<(String, String)>= Vec::new();
     for item in work.panorama.list.iter() {
-        println!("{:?}", item);
         let mut full_url = String::from(&work.base_url);
-        full_url.push_str(&item.right.as_str());
+        full_url.push_str(&item.right);
         download.push((full_url, path.join(&item.right).to_str().unwrap().to_string()));
+    }
+    download.push((work.picture_url.clone(), path.join("picture.jpg").to_str().unwrap().to_string()));
+    download.push((work.title_picture_url.clone(), path.join("title_picture.jpg").to_str().unwrap().to_string()));
+
+    let mut full_url = String::from(&work.base_url);
+    full_url.push_str(&work.model.file_url);
+    download.push((full_url, path.join(&work.model.file_url).to_str().unwrap().to_string()));
+    for item in work.model.material_textures.iter() {
+        let mut full_url = String::from(&work.base_url);
+        full_url.push_str(&work.model.material_base_url);
+        full_url.push_str(&item);
+        download.push((full_url, path.join(&work.model.material_base_url).join(&item).to_str().unwrap().to_string()));
     }
 
     for item in download.iter() {
@@ -124,7 +135,7 @@ async fn  do_download(url : String, dest : String) -> Result<(), String> {
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
         return Err(err.to_string())
     }
-
+    println!("{}", dest);
     let res = File::create(dest);
     if res.is_err() {
         return Ok(());
