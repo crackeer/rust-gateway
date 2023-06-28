@@ -179,6 +179,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
+name = "base64"
+version = "0.21.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
+
+[[package]]
 name = "base64ct"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1813,7 +1819,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26aba232ca5e7be60e607baf814de5e389a9952cfd3240822a0f7371476241e2"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.13.0",
  "html_parser",
  "proc-macro2",
  "quote",
@@ -1964,7 +1970,7 @@ version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b75aa69a3f06bbcc66ede33af2af253c6f7a86b1ca0033f60c580a27074fbf92"
 dependencies = [
- "base64",
+ "base64 0.13.0",
  "bytes 1.2.1",
  "encoding_rs",
  "futures-core",
@@ -2077,6 +2083,7 @@ name = "rust-gateway"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "base64 0.21.2",
  "hyper 0.13.10",
  "lazy_static",
  "rbatis",
@@ -2125,7 +2132,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
 dependencies = [
- "base64",
+ "base64 0.13.0",
  "log",
  "ring",
  "sct 0.6.1",
@@ -2150,7 +2157,7 @@ version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0864aeff53f8c05aa08d86e5ef839d3dfcf07aeba2db32f12db0ef716e87bd55"
 dependencies = [
- "base64",
+ "base64 0.13.0",
 ]
 
 [[package]]

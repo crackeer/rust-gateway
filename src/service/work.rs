@@ -1,7 +1,9 @@
+use rbatis::rbdc::bytes;
 use reqwest::{self};
 use std::fs::{File};
 use std::io::Write;
 use std::path::Path;
+use base64::{Engine as _, engine::general_purpose};
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -102,7 +104,10 @@ impl Work {
         return full_url;
     }
     fn get_download_list(&self) -> Vec<(String, String)> {
+        
         let mut download: Vec<(String, String)> = Vec::new();
+        download.push((self.picture_url.clone(), String::from("picture.jpg")));
+        download.push((self.title_picture_url.clone(), String::from("title_picture.jpg")));
         for item in self.panorama.list.iter() {
             download.push((self.with_base_url(&item.right), item.right.clone()));
             download.push((self.with_base_url(&item.left), item.left.clone()));
@@ -111,14 +116,39 @@ impl Work {
             download.push((self.with_base_url(&item.up), item.up.clone()));
             download.push((self.with_base_url(&item.down), item.down.clone()));
         }
-        download.push((self.picture_url.clone(), String::from("picture.jpg")));
-        download.push((self.title_picture_url.clone(), String::from("title_picture.jpg")));
         download.push((self.with_base_url(&self.model.file_url), self.model.file_url.clone()));
-
         for item in self.model.material_textures.iter() {
             download.push((self.with_base_url(&self.with_model_base_url(&item)), self.with_model_base_url(&item)))
         }
         return download;
+    }
+    fn get_jsonp_work(&self) -> String {
+        let mut work = self.clone();
+        let mut index :usize  = 0;
+        work.picture_url = format!("picture.jpg.{}.jsonp", index);
+        index = index + 1;
+        work.title_picture_url =  format!("title_picture.jpg.{}.jsonp", index);
+        for x in 0..self.panorama.list.len() {
+            index = index + 1;
+            work.panorama.list[x].right = format!("{}.{}.jsonp",  work.panorama.list[x].right , index);
+            index = index + 1;
+            work.panorama.list[x].left = format!("{}.{}.jsonp",  work.panorama.list[x].left , index);
+            index = index + 1;
+            work.panorama.list[x].front = format!("{}.{}.jsonp",  work.panorama.list[x].front , index);
+            index = index + 1;
+            work.panorama.list[x].back = format!("{}.{}.jsonp",  work.panorama.list[x].back , index);
+            index = index + 1;
+            work.panorama.list[x].up = format!("{}.{}.jsonp",  work.panorama.list[x].up , index);
+            index = index + 1;
+            work.panorama.list[x].down = format!("{}.{}.jsonp",  work.panorama.list[x].down , index);
+        }
+        index = index + 1;
+        work.model.file_url = format!("{}.{}.jsonp", work.model.file_url, index);
+        for x in 0..work.model.material_textures.len() {
+            index = index+1;
+            work.model.material_textures[x] = format!("{}.{}.jsonp", work.model.material_textures[x], index);
+        }
+        serde_json::to_string(&work).unwrap()
     }
 }
 
@@ -126,12 +156,15 @@ impl Work {
 pub async fn download_work_to(work: &Work, path: &Path) {
     let download: Vec<(String, String)> = work.get_download_list();
 
-    for item in download.iter() {
-        _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap()).await;
+    for (index, item) in download.iter().enumerate() {
+       // _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await;
     }
+   let work_json =  work.get_jsonp_work();
+    let file = File::create(path.join(&"work.json").to_str().unwrap());
+    file.unwrap().write_all(work_json.as_bytes());
 }
 
-async fn do_download(url: String, dest: &str) -> Result<(), String> {
+async fn do_download(url: String, dest: &str, index : usize) -> Result<(), String> {
     //let resp = reqwest::blocking::get(url);
     let client = reqwest::Client::new();
     let builder = client.get(url);
@@ -145,15 +178,35 @@ async fn do_download(url: String, dest: &str) -> Result<(), String> {
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
         return Err(err.to_string());
     }
-    let res = File::create(dest);
+    let mut real_dest = String::from(dest);
+    real_dest.push_str(&format!(".{}.jsonp", index));
+    let res = File::create(real_dest);
     if res.is_err() {
         return Ok(());
     }
     let mut buffer = res.unwrap();
+    let mut content_type = "";
+    let header = response.headers().clone();
+    if let Some(val) = header.get("Content-Type") {
+        content_type = val.to_str().unwrap();
+    }
     let bytes = response.bytes().await;
-    if let Err(err) = buffer.write_all(&bytes.unwrap().to_vec()) {
+    let base64_data = generate_jsonp_content(&content_type, &bytes.unwrap().to_vec(), index);
+    if let Err(err) = buffer.write_all(&base64_data.as_bytes()) {
         return Err(err.to_string());
     }
-    //resp.bytes()
     Ok(())
+}
+
+
+const IMAGE_JPEG: &str = "image/jpeg";
+const IMAGE_JPG: &str = "image/jpg";
+const IMAGE_PNG : &str = "image/png";
+
+fn generate_jsonp_content(content_type: &str, input : &[u8], hash_code : usize) -> String {
+    match content_type {
+        IMAGE_JPEG | IMAGE_JPG => format!("window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/jpeg;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
+        IMAGE_PNG => format!("window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/png;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
+        _ => format!("window['jsonp_{}'] && window['jsonp_{}'](\"data:application/octet-stream;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
+    }
 }
