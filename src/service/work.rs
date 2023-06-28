@@ -1,9 +1,13 @@
-use rbatis::rbdc::bytes;
-use reqwest::{self};
+use reqwest;
 use std::fs::{File};
 use std::io::Write;
 use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
+use rust_embed::RustEmbed;
+
+#[derive(RustEmbed)]
+#[folder = "static/"]
+struct Asset;
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -162,6 +166,15 @@ pub async fn download_work_to(work: &Work, path: &Path) {
    let work_json =  work.get_jsonp_work();
     let file = File::create(path.join(&"work.json").to_str().unwrap());
     file.unwrap().write_all(work_json.as_bytes());
+    for file in Asset::iter() {
+        println!("{}", file.as_ref());
+    }
+
+    let index_html = Asset::get("index.html").unwrap();
+    println!("{:?}", std::str::from_utf8(index_html.data.as_ref()));
+    for file in Asset::iter() {
+        println!("{}", file.as_ref());
+    }
 }
 
 async fn do_download(url: String, dest: &str, index : usize) -> Result<(), String> {
