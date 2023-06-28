@@ -1,10 +1,9 @@
 use reqwest;
-use std::fs::{File};
+use std::fs::{File, self};
 use std::io::Write;
 use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
-use rust_embed::RustEmbed;
-
+use rust_embed::{RustEmbed, Filenames};
 #[derive(RustEmbed)]
 #[folder = "static/"]
 struct Asset;
@@ -161,20 +160,19 @@ pub async fn download_work_to(work: &Work, path: &Path) {
     let download: Vec<(String, String)> = work.get_download_list();
 
     for (index, item) in download.iter().enumerate() {
-       // _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await;
+       _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await;
     }
-   let work_json =  work.get_jsonp_work();
-    let file = File::create(path.join(&"work.json").to_str().unwrap());
-    file.unwrap().write_all(work_json.as_bytes());
-    for file in Asset::iter() {
-        println!("{}", file.as_ref());
+    let work_json =  work.get_jsonp_work();
+    let mut file = File::create(path.join(&"work.js").to_str().unwrap()).unwrap();
+    file.write_all("var workJSON = ".as_bytes());
+    file.write_all(work_json.as_bytes());
+    for f in Asset::iter() {
+        let a = Asset::get(f.as_ref()).unwrap();
+        fs::write(path.join(f.as_ref()), a.data.as_ref());
     }
 
     let index_html = Asset::get("index.html").unwrap();
     println!("{:?}", std::str::from_utf8(index_html.data.as_ref()));
-    for file in Asset::iter() {
-        println!("{}", file.as_ref());
-    }
 }
 
 async fn do_download(url: String, dest: &str, index : usize) -> Result<(), String> {
