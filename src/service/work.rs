@@ -3,7 +3,7 @@ use std::fs::{File, self};
 use std::io::Write;
 use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
-use rust_embed::{RustEmbed, Filenames};
+use rust_embed::{RustEmbed};
 #[derive(RustEmbed)]
 #[folder = "static/"]
 struct Asset;
@@ -107,7 +107,6 @@ impl Work {
         return full_url;
     }
     fn get_download_list(&self) -> Vec<(String, String)> {
-        
         let mut download: Vec<(String, String)> = Vec::new();
         download.push((self.picture_url.clone(), String::from("picture.jpg")));
         download.push((self.title_picture_url.clone(), String::from("title_picture.jpg")));
@@ -156,23 +155,28 @@ impl Work {
 }
 
 
-pub async fn download_work_to(work: &Work, path: &Path) {
+pub async fn download_work_to(work: &Work, path: &Path) -> Result<(), String> {
     let download: Vec<(String, String)> = work.get_download_list();
 
     for (index, item) in download.iter().enumerate() {
-       _ = do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await;
+        do_download(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await?;
     }
     let work_json =  work.get_jsonp_work();
     let mut file = File::create(path.join(&"work.js").to_str().unwrap()).unwrap();
-    file.write_all("var workJSON = ".as_bytes());
-    file.write_all(work_json.as_bytes());
+    if let Err(err) = file.write_all("var workJSON = ".as_bytes()) {
+        return Err(err.to_string());
+    }
+    if let Err(err) = file.write_all(work_json.as_bytes()) {
+        return Err(err.to_string());
+    }
     for f in Asset::iter() {
         let a = Asset::get(f.as_ref()).unwrap();
-        fs::write(path.join(f.as_ref()), a.data.as_ref());
+        if let Err(err) = fs::write(path.join(f.as_ref()), a.data.as_ref()) {
+            return Err(format!("write static file `{}` error: {}", f.as_ref(), err.to_string()));
+        }
     }
 
-    let index_html = Asset::get("index.html").unwrap();
-    println!("{:?}", std::str::from_utf8(index_html.data.as_ref()));
+    Ok(())
 }
 
 async fn do_download(url: String, dest: &str, index : usize) -> Result<(), String> {
